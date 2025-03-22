@@ -1,5 +1,5 @@
 # Ignore specific files in the /data directory
-/data/*.csv
+/data/raw/*.csv
 
 # Ignore Python cache files
 __pycache__/
