@@ -1,6 +1,10 @@
 # Ignore specific files in the /data directory
 /data/raw/*.csv
 
+# Ignore all datafiles
+/data/*
+
+
 # Ignore Python cache files
 __pycache__/
 *.pyc
