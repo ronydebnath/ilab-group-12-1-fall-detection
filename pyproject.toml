@@ -1,23 +1,22 @@
-[project]
+[tool.poetry]
 name = "ilab-group-12-1-fall-detection"
 version = "0.1.0"
 description = "Fall Detection with IoT and Swarm Learning"
 authors = [
-    {name = "Rony Debnath",email = "rony.debnathdebnath@student.uts.edu.au"},
-    {name = "Ratana Sovann", email="sovann.ratana@student.uts.edu.au"},
-    {name = "Sidhant Bajaj", email="sidhant.bajaj@student.uts.edu.au"},
-    {name = "Vishwas Singh", email="Vishwas.singh@student.uts.edu.au"},
-    {name = "Katherin Gomez Londono", email="katherin.a.gomezlondono@student.uts.edu.au"},
-    {name = "Drishya Chuke", email="drishya.l.chuke@student.uts.edu.au"}
+    "Rony Debnath <rony.debnathdebnath@student.uts.edu.au>",
+    "Ratana Sovann <sovann.ratana@student.uts.edu.au>",
+    "Sidhant Bajaj <sidhant.bajaj@student.uts.edu.au>",
+    "Vishwas Singh <Vishwas.singh@student.uts.edu.au>",
+    "Katherin Gomez Londono <katherin.a.gomezlondono@student.uts.edu.au>",
+    "Drishya Chuke <drishya.l.chuke@student.uts.edu.au>"
 ]
 readme = "README.md"
-requires-python = ">=3.9"
-dependencies = [
-]
+packages = [{ include = "ilab_group_12_1_fall_detection", from = "src" }]
+# add any required dependencies like below
+# dependencies = ["pandas", "scikit-learn"]
 
-[tool.poetry]
-packages = [{include = "ilab_group_12_1_fall_detection", from = "src"}]
-
+[tool.poetry.dependencies]
+python = ">=3.9"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
