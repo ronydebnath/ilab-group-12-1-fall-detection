@@ -16,8 +16,14 @@ packages = [{ include = "ilab_group_12_1_fall_detection", from = "src" }]
 # dependencies = ["pandas", "scikit-learn"]
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = "^3.10"
 notebook = "^7.3.3"
+pandas = "^2.2.3"
+numpy = "^2.2.4"
+scikit-learn = "^1.6.1"
+matplotlib = "^3.10.1"
+seaborn = "^0.13.2"
+scipy = "^1.15.2"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
