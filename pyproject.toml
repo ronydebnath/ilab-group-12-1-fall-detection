@@ -18,6 +18,9 @@ packages = [{ include = "ilab_group_12_1_fall_detection", from = "src" }]
 [tool.poetry.dependencies]
 python = ">=3.9"
 notebook = "^7.3.3"
+flask = "^2.2.2"
+numpy = "^1.23.5"
+requests = "^2.28.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
