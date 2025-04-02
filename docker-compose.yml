@@ -2,19 +2,19 @@ version: '3.8'
 services:
   aggregator:
     build:
-      context: ./swarm_learning
+      context: .
       dockerfile: Dockerfile
     container_name: aggregator
     environment:
       - ROLE=aggregator
     ports:
-      - "5000:5000"
+      - "5001:5000"
     networks:
       - swarm-net
 
   node1:
     build:
-      context: ./swarm_learning
+      context: .
       dockerfile: Dockerfile
     container_name: node1
     environment:
@@ -26,7 +26,7 @@ services:
 
   node2:
     build:
-      context: ./swarm_learning
+      context: .
       dockerfile: Dockerfile
     container_name: node2
     environment:
@@ -38,7 +38,7 @@ services:
 
   node3:
     build:
-      context: ./swarm_learning
+      context: .
       dockerfile: Dockerfile
     container_name: node3
     environment:
