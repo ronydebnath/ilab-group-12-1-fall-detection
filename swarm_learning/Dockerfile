@@ -1,23 +1,29 @@
-# Use an official Python runtime as a base image
+# Use an official Python slim image
 FROM python:3.9-slim
 
-# Set the working directory in the container
+# (Optional) Install build tools if needed for certain dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry globally
+RUN pip install poetry
+
+# Set working directory
 WORKDIR /app
 
-# Copy the local requirements file to the container
-COPY requirements.txt .
+# Copy poetry files (pyproject.toml and poetry.lock) to install dependencies
+COPY pyproject.toml poetry.lock* /app/
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Configure poetry to install packages into the system environment (not a virtualenv)
+RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
 
-# Copy the rest of the code into the container
-COPY . .
+# Copy the entire repository into the container
+COPY . /app
 
-# Expose a port if your node exposes a REST API (e.g., port 5000)
+# Expose port 5000 (used by the aggregator Flask app)
 EXPOSE 5000
 
-# Define environment variables (if needed)
-ENV NODE_ID=default_node
-
-# Command to run the node (adjust based on your implementation)
-CMD ["python", "node.py"]
+# Set default command to run our entrypoint script.
+# This script will check the ROLE environment variable and launch aggregator.py or node.py.
+CMD ["python", "swarm_learning/entrypoint.py"]
