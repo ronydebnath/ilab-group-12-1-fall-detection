@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  aggregator:
+    build:
+      context: ./swarm_learning
+      dockerfile: Dockerfile
+    container_name: aggregator
+    environment:
+      - ROLE=aggregator
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    networks:
+      - swarm-net
+
+  node1:
+    build:
+      context: ./swarm_learning
+      dockerfile: Dockerfile
+    container_name: node1
+    environment:
+      - ROLE=node
+      - NODE_ID=node1
+      - AGGREGATOR_URL=http://aggregator:5000
+    networks:
+      - swarm-net
+
+  node2:
+    build:
+      context: ./swarm_learning
+      dockerfile: Dockerfile
+    container_name: node2
+    environment:
+      - ROLE=node
+      - NODE_ID=node2
+      - AGGREGATOR_URL=http://aggregator:5000
+    networks:
+      - swarm-net
+
+  node3:
+    build:
+      context: ./swarm_learning
+      dockerfile: Dockerfile
+    container_name: node3
+    environment:
+      - ROLE=node
+      - NODE_ID=node3
+      - AGGREGATOR_URL=http://aggregator:5000
+    networks:
+      - swarm-net
+
+networks:
+  swarm-net:
+    driver: bridge
