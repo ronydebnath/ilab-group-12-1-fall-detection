@@ -20,7 +20,7 @@ def local_training():
     return np.random.rand(3).tolist()
 
 def elect_leader(peers):
-    all_nodes = peers + [f"http://{NODE_ID}:5000"]
+    all_nodes = peers + [NODE_ID]
     sorted_nodes = sorted(all_nodes)
     return sorted_nodes[0]
 
