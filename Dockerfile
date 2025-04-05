@@ -1,29 +1,32 @@
-# Use an official Python 3.9 slim image as base
+# Use an official Python 3.10 slim image as base
 FROM python:3.10-slim
 
-# Install build-essential if needed for some dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    libglib2.0-0 libsm6 libxrender1 libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry globally
-RUN pip install poetry
-
-# Set working directory in container
+# Set working directory
 WORKDIR /app
 
-# Copy poetry configuration files and README.md from the repository root into /app/
+# Copy poetry and config files
 COPY pyproject.toml poetry.lock* README.md /app/
 
-# Configure Poetry to install packages in the system environment and do not install the current project (--no-root)
-RUN poetry config virtualenvs.create false && poetry install --no-root --no-interaction --no-ansi
+# Install pip and poetry
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install poetry
 
-# Copy the entire repository into the container
+# Downgrade numpy explicitly to avoid incompatibility with TensorFlow
+RUN poetry config virtualenvs.create false \
+    && poetry add numpy@^1.26.4 tensorflow@2.16.1
+
+# Copy app source
 COPY . /app
 
-# Expose port 5000 (for the aggregator's Flask server)
+# Expose port
 EXPOSE 5000
 
-# Set the entrypoint to run the swarm learning entrypoint script.
-CMD ["python", "federated_learning/entrypoint.py"]
+# Entry point
+CMD ["python", "swarm_learning/entrypoint.py"]
