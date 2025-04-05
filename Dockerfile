@@ -1,5 +1,5 @@
 # Use an official Python 3.9 slim image as base
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Install build-essential if needed for some dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -26,4 +26,4 @@ COPY . /app
 EXPOSE 5000
 
 # Set the entrypoint to run the swarm learning entrypoint script.
-CMD ["python", "swarm_learning/entrypoint.py"]
+CMD ["python", "federated_learning/entrypoint.py"]
