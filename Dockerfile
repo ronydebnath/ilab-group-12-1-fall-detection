@@ -26,4 +26,4 @@ COPY . /app
 EXPOSE 5000
 
 # Set the entrypoint to run the swarm learning entrypoint script.
-CMD ["python", "federated_learning/entrypoint.py"]
+CMD ["python", "swarm_learning/entrypoint.py"]

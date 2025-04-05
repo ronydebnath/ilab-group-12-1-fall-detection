@@ -1,45 +1,112 @@
-# node.py
 import os
 import time
+import threading
 import requests
 import numpy as np
+from flask import Flask, request, jsonify
 
-# Retrieve environment variables
-AGGREGATOR_URL = os.environ.get('AGGREGATOR_URL', 'http://localhost:5000')
+app = Flask(__name__)
+
 NODE_ID = os.environ.get('NODE_ID', 'node_default')
+PEERS = os.environ.get('PEERS', '').split(',')
+ROUND_DURATION = 20  # seconds
+
+received_weights = {}
+global_model = None
+lock = threading.Lock()
 
 def local_training():
-    # Simulate local training: generate dummy weight vector
-    dummy_weights = np.random.rand(3).tolist()
-    return dummy_weights
+    # Simulate local training: generate dummy weights
+    return np.random.rand(3).tolist()
 
-def send_weight_update(weights):
-    payload = {
-        'node_id': NODE_ID,
-        'weights': weights
-    }
-    try:
-        response = requests.post(f"{AGGREGATOR_URL}/submit_weight", json=payload)
-        if response.status_code == 200:
-            data = response.json()
-            if 'global_model' in data:
-                print(f"Node {NODE_ID}: Received updated global model: {data['global_model']}")
-                return data['global_model']
-            else:
-                print(f"Node {NODE_ID}: Update acknowledged: {data.get('message', '')}")
-        else:
-            print(f"Node {NODE_ID}: Failed to send update: {response.text}")
-    except Exception as e:
-        print(f"Node {NODE_ID}: Error sending weight update: {e}")
-    return None
+def elect_leader(peers):
+    all_nodes = peers + [f"http://{NODE_ID}:5000"]
+    sorted_nodes = sorted(all_nodes)
+    return sorted_nodes[0]
 
-def main():
+def share_weights_with_peers(weights):
+    for peer in PEERS:
+        try:
+            requests.post(f"{peer}/receive_weight", json={
+                'node_id': NODE_ID,
+                'weights': weights
+            }, timeout=3)
+        except Exception as e:
+            print(f"[{NODE_ID}] Failed to send to {peer}: {e}")
+
+def broadcast_global_model(model):
+    for peer in PEERS:
+        try:
+            requests.post(f"{peer}/receive_global_model", json={
+                'global_model': model
+            }, timeout=3)
+        except Exception as e:
+            print(f"[{NODE_ID}] Failed to broadcast to {peer}: {e}")
+
+@app.route('/receive_weight', methods=['POST'])
+def receive_weight():
+    data = request.get_json()
+    node = data['node_id']
+    weights = data['weights']
+    with lock:
+        received_weights[node] = weights
+    print(f"[{NODE_ID}] Received weights from {node}: {weights}")
+    return jsonify({'status': 'ok'})
+
+@app.route('/receive_global_model', methods=['POST'])
+def receive_global_model():
+    global global_model
+    data = request.get_json()
+    with lock:
+        global_model = data['global_model']
+    print(f"[{NODE_ID}] Updated global model: {global_model}")
+    return jsonify({'status': 'global_model_updated'})
+
+def aggregate_weights():
+    with lock:
+        if not received_weights:
+            return None
+        weights = np.array(list(received_weights.values()))
+        return weights.mean(axis=0).tolist()
+
+def run_federated_loop():
+    global global_model
+    round_num = 0
     while True:
+        print(f"\n[{NODE_ID}] --- Federated Round {round_num} ---")
+
+        # Local training
         local_weights = local_training()
-        print(f"Node {NODE_ID}: Trained local model weights: {local_weights}")
-        updated_global_model = send_weight_update(local_weights)
-        # In practice, update your local model with the global model here.
-        time.sleep(10)  # Wait before next round
+        print(f"[{NODE_ID}] Local weights: {local_weights}")
+
+        # Share with peers
+        share_weights_with_peers(local_weights)
+
+        # Add own weights
+        with lock:
+            received_weights[NODE_ID] = local_weights
+
+        time.sleep(ROUND_DURATION // 2)  # Wait for others to send
+
+        leader = elect_leader(PEERS)
+        print(f"[{NODE_ID}] Leader elected: {leader}")
+
+        # If leader, aggregate and broadcast
+        if f"http://{NODE_ID}:5000" == leader:
+            model = aggregate_weights()
+            if model:
+                print(f"[{NODE_ID}] Aggregated global model: {model}")
+                with lock:
+                    global_model = model
+                broadcast_global_model(model)
+
+        # Reset for next round
+        with lock:
+            received_weights.clear()
+
+        time.sleep(ROUND_DURATION // 2)
+        round_num += 1
 
 if __name__ == '__main__':
-    main()
+    threading.Thread(target=run_federated_loop, daemon=True).start()
+    app.run(host='0.0.0.0', port=5000)

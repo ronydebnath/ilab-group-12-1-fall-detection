@@ -1,16 +1,4 @@
 services:
-  aggregator:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: aggregator
-    environment:
-      - ROLE=aggregator
-    ports:
-      - "5001:5000"
-    networks:
-      - swarm-net
-
   node1:
     build:
       context: .
@@ -19,7 +7,9 @@ services:
     environment:
       - ROLE=node
       - NODE_ID=node1
-      - AGGREGATOR_URL=http://aggregator:5000
+      - PEERS=http://node2:5000,http://node3:5000
+    ports:
+      - "5001:5000"
     networks:
       - swarm-net
 
@@ -31,7 +21,9 @@ services:
     environment:
       - ROLE=node
       - NODE_ID=node2
-      - AGGREGATOR_URL=http://aggregator:5000
+      - PEERS=http://node1:5000,http://node3:5000
+    ports:
+      - "5002:5000"
     networks:
       - swarm-net
 
@@ -43,7 +35,9 @@ services:
     environment:
       - ROLE=node
       - NODE_ID=node3
-      - AGGREGATOR_URL=http://aggregator:5000
+      - PEERS=http://node1:5000,http://node2:5000
+    ports:
+      - "5003:5000"
     networks:
       - swarm-net
 
