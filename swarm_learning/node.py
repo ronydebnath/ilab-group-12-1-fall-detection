@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 NODE_ID = os.environ.get('NODE_ID', 'node_default')
-PEERS = os.environ.get('PEERS', '').split(',')
+PEERS = [peer for peer in os.environ.get('PEERS', '').split(',') if peer]
 ROUND_DURATION = 20  # seconds
 
 received_weights = {}
