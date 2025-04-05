@@ -25,8 +25,8 @@ RUN poetry config virtualenvs.create false \
 # Copy app source
 COPY . /app
 
-# Expose port
-EXPOSE 5000
+# Expose communication port
+EXPOSE 5555
 
 # Entry point
 CMD ["python", "swarm_learning/entrypoint.py"]
