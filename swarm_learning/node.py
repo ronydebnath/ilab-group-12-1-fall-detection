@@ -1,112 +1,65 @@
-import os
-import time
-import threading
-import requests
-import numpy as np
-from flask import Flask, request, jsonify
+# Import necessary libraries
+import os  
+import time  
+import requests  
+import numpy
+if not numpy.__version__.startswith("1."):
+    raise RuntimeError(f"Incompatible NumPy version detected: {numpy.__version__}. Please use numpy<2.")
+import tensorflow as tf  
+import base64  
+import json  
 
-app = Flask(__name__)
-
+# Get the unique node ID from environment variable or use default
 NODE_ID = os.environ.get('NODE_ID', 'node_default')
-PEERS = [peer for peer in os.environ.get('PEERS', '').split(',') if peer]
-ROUND_DURATION = 20  # seconds
 
-received_weights = {}
-global_model = None
-lock = threading.Lock()
+# Get list of peer addresses from environment variable, split into a list
+PEERS = os.environ.get("PEERS", "").split(',')
 
+# Define this node's own address based on NODE_ID
+SELF_ADDRESS = f"http://{NODE_ID}:5000"
+
+# Time interval between training rounds (in seconds)
+ROUND_INTERVAL = 20
+
+# Load and preprocess the MNIST dataset
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0  # Normalize pixel values to [0, 1]
+x_train = x_train.reshape(-1, 28 * 28)  # Flatten images for input into dense network
+x_test = x_test.reshape(-1, 28 * 28)
+
+# Define a simple neural network model with one hidden layer and softmax output
+model = tf.keras.Sequential([
+    tf.keras.Input(shape=(784,)),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+
+
+# Compile the model with optimizer, loss function, and evaluation metric
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Serialize model weights into a base64-encoded JSON string
+def serialize_weights(weights):
+    return base64.b64encode(json.dumps([w.tolist() for w in weights]).encode()).decode()
+
+# Deserialize base64-encoded JSON string back into list of NumPy arrays (model weights)
+def deserialize_weights(serialized):
+    return [np.array(w) for w in json.loads(base64.b64decode(serialized).decode())]
+
+# Train the model on local data for 1 epoch and return the updated weights
 def local_training():
-    # Simulate local training: generate dummy weights
-    return np.random.rand(3).tolist()
+    model.fit(x_train, y_train, epochs=1, batch_size=32, verbose=0)
+    return model.get_weights()
 
-def elect_leader(peers):
-    all_nodes = peers + [NODE_ID]
-    sorted_nodes = sorted(all_nodes)
-    return sorted_nodes[0]
+# Send current node's weights to all peer nodes
+def send_weights_to_peers(weights):
+    encoded = serialize_weights(weights)
 
-def share_weights_with_peers(weights):
-    for peer in PEERS:
-        try:
-            requests.post(f"{peer}/receive_weight", json={
-                'node_id': NODE_ID,
-                'weights': weights
-            }, timeout=3)
-        except Exception as e:
-            print(f"[{NODE_ID}] Failed to send to {peer}: {e}")
-
-def broadcast_global_model(model):
-    for peer in PEERS:
-        try:
-            requests.post(f"{peer}/receive_global_model", json={
-                'global_model': model
-            }, timeout=3)
-        except Exception as e:
-            print(f"[{NODE_ID}] Failed to broadcast to {peer}: {e}")
-
-@app.route('/receive_weight', methods=['POST'])
-def receive_weight():
-    data = request.get_json()
-    node = data['node_id']
-    weights = data['weights']
-    with lock:
-        received_weights[node] = weights
-    print(f"[{NODE_ID}] Received weights from {node}: {weights}")
-    return jsonify({'status': 'ok'})
-
-@app.route('/receive_global_model', methods=['POST'])
-def receive_global_model():
-    global global_model
-    data = request.get_json()
-    with lock:
-        global_model = data['global_model']
-    print(f"[{NODE_ID}] Updated global model: {global_model}")
-    return jsonify({'status': 'global_model_updated'})
-
-def aggregate_weights():
-    with lock:
-        if not received_weights:
-            return None
-        weights = np.array(list(received_weights.values()))
-        return weights.mean(axis=0).tolist()
-
-def run_federated_loop():
-    global global_model
-    round_num = 0
+if __name__ == "__main__":
+    print(f"{NODE_ID}: Starting training loop...")
     while True:
-        print(f"\n[{NODE_ID}] --- Federated Round {round_num} ---")
+        weights = local_training()
+        send_weights_to_peers(weights)
 
-        # Local training
-        local_weights = local_training()
-        print(f"[{NODE_ID}] Local weights: {local_weights}")
-
-        # Share with peers
-        share_weights_with_peers(local_weights)
-
-        # Add own weights
-        with lock:
-            received_weights[NODE_ID] = local_weights
-
-        time.sleep(ROUND_DURATION // 2)  # Wait for others to send
-
-        leader = elect_leader(PEERS)
-        print(f"[{NODE_ID}] Leader elected: {leader}")
-
-        # If leader, aggregate and broadcast
-        if f"http://{NODE_ID}:5000" == leader:
-            model = aggregate_weights()
-            if model:
-                print(f"[{NODE_ID}] Aggregated global model: {model}")
-                with lock:
-                    global_model = model
-                broadcast_global_model(model)
-
-        # Reset for next round
-        with lock:
-            received_weights.clear()
-
-        time.sleep(ROUND_DURATION // 2)
-        round_num += 1
-
-if __name__ == '__main__':
-    threading.Thread(target=run_federated_loop, daemon=True).start()
-    app.run(host='0.0.0.0', port=5000)
+        print(f"{NODE_ID}: Sent weights to peers.")
+        time.sleep(ROUND_INTERVAL)

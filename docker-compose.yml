@@ -8,6 +8,7 @@ services:
       - ROLE=node
       - NODE_ID=node1
       - PEERS=http://node2:5000,http://node3:5000
+      - PYTHONUNBUFFERED=1
     ports:
       - "5001:5000"
     networks:
@@ -22,6 +23,7 @@ services:
       - ROLE=node
       - NODE_ID=node2
       - PEERS=http://node1:5000,http://node3:5000
+      - PYTHONUNBUFFERED=1
     ports:
       - "5002:5000"
     networks:
@@ -36,6 +38,7 @@ services:
       - ROLE=node
       - NODE_ID=node3
       - PEERS=http://node1:5000,http://node2:5000
+      - PYTHONUNBUFFERED=1
     ports:
       - "5003:5000"
     networks:
