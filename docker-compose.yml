@@ -1,48 +1,40 @@
 services:
-  node1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: node1
-    environment:
-      - ROLE=node
-      - NODE_ID=node1
-      - PEERS=node2:5555,node3:5555
-      - PYTHONUNBUFFERED=1
+  fedml-server:
+    build: .
+    container_name: fedml-server
+    command: >
+      python -u src/main.py
+      --cf config/fedml_config.yaml
+      --rank 0
+      --device_id 0
     networks:
       - swarm-net
-    ports:
-      - "5001:5555"
 
-  node2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: node2
-    environment:
-      - ROLE=node
-      - NODE_ID=node2
-      - PEERS=node1:5555,node3:5555
-      - PYTHONUNBUFFERED=1
+  fedml-client1:
+    build: .
+    container_name: fedml-client1
+    command: >
+      python -u src/main.py
+      --cf config/fedml_config.yaml
+      --rank 1
+      --device_id 1
+    depends_on:
+      - fedml-server
     networks:
       - swarm-net
-    ports:
-      - "5002:5555"
 
-  node3:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: node3
-    environment:
-      - ROLE=node
-      - NODE_ID=node3
-      - PEERS=node1:5555,node2:5555
-      - PYTHONUNBUFFERED=1
+  fedml-client2:
+    build: .
+    container_name: fedml-client2
+    command: >
+      python -u src/main.py
+      --cf config/fedml_config.yaml
+      --rank 2
+      --device_id 2
+    depends_on:
+      - fedml-server
     networks:
       - swarm-net
-    ports:
-      - "5003:5555"
 
 networks:
   swarm-net:

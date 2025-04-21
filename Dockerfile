@@ -1,32 +1,20 @@
-# Use an official Python 3.10 slim image as base
 FROM python:3.10-slim
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    libglib2.0-0 libsm6 libxrender1 libxext6 \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential curl libglib2.0-0 libsm6 libxrender1 libxext6 \
+  && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy poetry and config files
-COPY pyproject.toml poetry.lock* README.md /app/
+# Install Poetry via official installer (v1.7+)
+RUN curl -sSL https://install.python-poetry.org | python3 - \
+ && ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
-# Install pip and poetry
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install poetry
-
-# Downgrade numpy explicitly to avoid incompatibility with TensorFlow
+# Disable venv creation & install dependencies
+COPY pyproject.toml poetry.lock README.md /app/
 RUN poetry config virtualenvs.create false \
-    && poetry add numpy@^1.26.4 tensorflow@2.16.1
+ && poetry add fedml@^0.9.6 torch@2.6.0 \
+ && poetry install --no-root --no-interaction --no-ansi
 
-# Copy app source
 COPY . /app
-
-# Expose communication port
-EXPOSE 5555
-
-# Entry point
-CMD ["python", "swarm_learning/entrypoint.py"]
+CMD ["python", "src/main.py"] 
