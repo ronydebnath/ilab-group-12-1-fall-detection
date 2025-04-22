@@ -1,4 +1,4 @@
-# node.py
+# swarm_learning/node.py
 
 # Import required libraries
 import os
@@ -8,66 +8,128 @@ if not np.__version__.startswith("1."):
     raise RuntimeError(f"Incompatible NumPy version detected: {np.__version__}. Please use numpy<2.")
 
 import tensorflow as tf
-# Reduce CPU usage per container
+# Limit TensorFlow CPU parallelism to avoid excessive memory usage
 tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
+
 import base64
 import json
 import zmq
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 
 # Configuration from environment variables
-NODE_ID = os.environ.get('NODE_ID', 'node_default')
+NODE_ID     = os.environ.get('NODE_ID', 'node_default')
+DATA_PATH   = os.environ.get('DATA_PATH', '/app/data/df_filtered_cnn.pkl')
+peers_env   = os.environ.get('PEERS', '')
+PEERS       = [p.strip() for p in peers_env.split(',') if p.strip()] if peers_env else []
+ROUND_INTERVAL = 20        # seconds between training rounds
+ZMQ_PORT       = 5555      # ZeroMQ communication port
 
-# Safely parse the PEERS variable into a list of peer addresses.
-# Expected format: "node2:5555,node3:5555" (without any "http://" prefix)
-peers_env = os.environ.get("PEERS", "")
-if peers_env:
-    PEERS = [p.strip() for p in peers_env.split(',') if p.strip()]
-else:
-    PEERS = []
+# ----------------------------- Data Loading and Preprocessing -----------------------------
 
-ROUND_INTERVAL = 20  # Time delay between training rounds (in seconds)
-ZMQ_PORT = 5555      # Default ZeroMQ communication port
+def load_and_preprocess_data():
+    """
+    Loads the pickled DataFrame from DATA_PATH, creates overlapping windows,
+    encodes labels, and splits into train/test sets.
+    """
+    # 1. Load DataFrame
+    print(f"{NODE_ID}: Loading data from {DATA_PATH}")
+    if not os.path.isfile(DATA_PATH):
+        raise FileNotFoundError(f"{NODE_ID}: Data file not found at {DATA_PATH}")
+    df = pd.read_pickle(DATA_PATH)
+    print(f"{NODE_ID}: Successfully loaded data ({len(df)} rows)")
 
-# Load and preprocess the MNIST dataset
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-x_train, x_test = x_train / 255.0, x_test / 255.0                         # Normalize pixel values to [0, 1]
-x_train = x_train.reshape(-1, 28 * 28)                                    # Flatten images to 784-dimensional vectors
-x_test = x_test.reshape(-1, 28 * 28)
+    # 2. Define sensor columns
+    sensor_cols = ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z']
 
-# Define a simple feedforward neural network model
-model = tf.keras.Sequential([
-    tf.keras.Input(shape=(784,)),
-    tf.keras.layers.Dense(64, activation='relu'),         # Hidden layer with ReLU activation
-    tf.keras.layers.Dense(10, activation='softmax')         # Output layer for 10 digit classes
-])
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    # 3. Create sliding windows with majority-voted labels
+    def create_windows(data, window_size=25, step_size=12):
+        X, y = [], []
+        arr   = data[sensor_cols].values
+        labs  = data['label'].values
+        for start in range(0, len(data) - window_size + 1, step_size):
+            end = start + window_size
+            window_data   = arr[start:end]
+            window_labels = labs[start:end]
+            # majority vote
+            uniq, cnts = np.unique(window_labels, return_counts=True)
+            label = uniq[np.argmax(cnts)]
+            X.append(window_data)
+            y.append(label)
+        return np.array(X), np.array(y)
 
-# ----------------------------- Helper Functions -----------------------------
+    X, y = create_windows(df)
+    le    = LabelEncoder()
+    y_enc = le.fit_transform(y)
+
+    # 4. Split into train/test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y_enc, test_size=0.15, random_state=42
+    )
+    print(f"{NODE_ID}: Data preprocessing completed. Train shape: {X_train.shape}")
+
+    return X_train, X_test, y_train, y_test, len(np.unique(y_enc))
+
+# Load data once at startup
+X_train, X_test, y_train, y_test, num_classes = load_and_preprocess_data()
+
+# ----------------------------- Model Definition -----------------------------
+
+def create_model(input_shape, num_classes):
+    """
+    Builds a CNN-LSTM model for fall detection.
+    """
+    model = tf.keras.Sequential([
+        tf.keras.layers.Conv1D(64, 3, activation='relu', input_shape=input_shape),
+        tf.keras.layers.Conv1D(128, 3, activation='relu'),
+        tf.keras.layers.MaxPooling1D(2),
+        tf.keras.layers.Conv1D(128, 3, activation='relu'),
+        tf.keras.layers.LSTM(64),
+        tf.keras.layers.Dense(64, activation='relu'),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(num_classes, activation='softmax')
+    ])
+    return model
+
+# Instantiate and compile model
+model = create_model((X_train.shape[1], X_train.shape[2]), num_classes)
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# ----------------------------- Utility Functions -----------------------------
 
 def serialize_weights(weights):
     """
-    Serialize a list of NumPy arrays (model weights) into a base64-encoded JSON string.
+    Serialize model weights (list of NumPy arrays) to a base64-encoded JSON string.
     """
-    return base64.b64encode(json.dumps([w.tolist() for w in weights]).encode()).decode()
+    return base64.b64encode(
+        json.dumps([w.tolist() for w in weights]).encode()
+    ).decode()
 
 def add_noise(weights, noise_std=0.01):
     """
-    Adds Gaussian noise to model weights for differential privacy.
-    The noise is added only for sharing, not for internal training.
+    Adds Gaussian noise for differential privacy to a list of weight arrays.
     """
     return [w + np.random.normal(0, noise_std, size=w.shape) for w in weights]
 
 def send_weights(peer, weights):
     """
-    Sends the (noisy) model weights to the specified peer via ZeroMQ REQ/REP pattern.
-    Uses a 3-second timeout to avoid blocking indefinitely.
+    Sends the (noisy) weights to a peer via ZeroMQ REQ/REP with a 3s timeout.
     """
     context = zmq.Context()
-    socket = context.socket(zmq.REQ)
-    socket.RCVTIMEO = 3000  # Set timeout to 3000ms (3 seconds)
+    socket  = context.socket(zmq.REQ)
+    socket.RCVTIMEO = 3000
     try:
-        # Connect to the peer directly. The peer should be in "hostname:port" format.
+        print(f"\n{NODE_ID}: Connecting to {peer}")
+        print(f"{NODE_ID}: Sending weights with shapes:")
+        for i, w in enumerate(weights):
+            print(f"  Layer {i}: shape={w.shape}, mean={w.mean():.6f}, std={w.std():.6f}")
+        
         socket.connect(f"tcp://{peer}")
         payload = {
             "type": "send_weight",
@@ -75,14 +137,12 @@ def send_weights(peer, weights):
             "weights": serialize_weights(weights)
         }
         socket.send_json(payload)
-
-        # Wait for reply with timeout
         reply = socket.recv_json()
-        print(f"{NODE_ID}: Sent weights to {peer}, status: {reply['status']}")
+        print(f"{NODE_ID}: Sent weights to {peer}, status: {reply.get('status')}")
     except zmq.error.Again:
-        print(f"{NODE_ID}: Timeout waiting for reply from {peer}")
+        print(f"{NODE_ID}: Timeout when sending to {peer}")
     except Exception as e:
-        print(f"{NODE_ID}: Failed to contact {peer}: {e}")
+        print(f"{NODE_ID}: Error sending to {peer}: {e}")
     finally:
         socket.close()
         context.term()
@@ -90,26 +150,17 @@ def send_weights(peer, weights):
 # ----------------------------- Main Training Loop -----------------------------
 
 if __name__ == "__main__":
-    print(f"{NODE_ID}: Starting training loop...")
+    print(f"{NODE_ID}: Starting training loop with peers: {PEERS}")
     while True:
-        # Get current weights (pre-training snapshot, if needed)
-        weights = model.get_weights()
-
-        # For testing, use a small subset of data to reduce resource usage.
-        x_train_small = x_train[:100]
-        y_train_small = y_train[:100]
+        # 1. Local training
         print(f"{NODE_ID}: Before training")
-        # model.fit(x_train_small, y_train_small, epochs=1, batch_size=32, verbose=0)
-        # Train model locally for one epoch
-        model.fit(x_train, y_train, epochs=1, batch_size=32, verbose=0)
+        model.fit(X_train, y_train, epochs=1, batch_size=32, verbose=0)
         print(f"{NODE_ID}: After training")
 
-        # Add noise to model weights before sharing for differential privacy.
-        noisy_weights = add_noise(model.get_weights())
-
-        # Send noisy weights to all known peers
+        # 2. Prepare and send noisy weights
+        noisy = add_noise(model.get_weights())
         for peer in PEERS:
-            send_weights(peer, noisy_weights)
+            send_weights(peer, noisy)
 
-        # Wait before next training round
+        # 3. Wait for next round
         time.sleep(ROUND_INTERVAL)

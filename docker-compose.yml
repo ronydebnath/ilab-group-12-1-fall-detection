@@ -1,49 +1,43 @@
 services:
   node1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: node1
+    build: .
     environment:
-      - ROLE=node
       - NODE_ID=node1
       - PEERS=node2:5555,node3:5555
-      - PYTHONUNBUFFERED=1
-    networks:
-      - swarm-net
+      - DATA_PATH=/app/data/df_filtered_cnn.pkl
+    volumes:
+      - ./data:/app/data:ro
     ports:
-      - "5001:5555"
+      - "5555:5555"
+    networks:
+      - swarm-network
 
   node2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: node2
+    build: .
     environment:
-      - ROLE=node
       - NODE_ID=node2
       - PEERS=node1:5555,node3:5555
-      - PYTHONUNBUFFERED=1
-    networks:
-      - swarm-net
+      - DATA_PATH=/app/data/df_filtered_cnn.pkl
+    volumes:
+      - ./data:/app/data:ro
     ports:
-      - "5002:5555"
+      - "5556:5555"
+    networks:
+      - swarm-network
 
   node3:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: node3
+    build: .
     environment:
-      - ROLE=node
       - NODE_ID=node3
       - PEERS=node1:5555,node2:5555
-      - PYTHONUNBUFFERED=1
-    networks:
-      - swarm-net
+      - DATA_PATH=/app/data/df_filtered_cnn.pkl
+    volumes:
+      - ./data:/app/data:ro
     ports:
-      - "5003:5555"
+      - "5557:5555"
+    networks:
+      - swarm-network
 
 networks:
-  swarm-net:
+  swarm-network:
     driver: bridge
