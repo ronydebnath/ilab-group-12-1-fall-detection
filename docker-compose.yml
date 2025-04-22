@@ -7,12 +7,12 @@ services:
     environment:
       - ROLE=node
       - NODE_ID=node1
-      - PEERS=http://node2:5000,http://node3:5000
+      - PEERS=node2:5555,node3:5555
       - PYTHONUNBUFFERED=1
-    ports:
-      - "5001:5000"
     networks:
       - swarm-net
+    ports:
+      - "5001:5555"
 
   node2:
     build:
@@ -22,12 +22,12 @@ services:
     environment:
       - ROLE=node
       - NODE_ID=node2
-      - PEERS=http://node1:5000,http://node3:5000
+      - PEERS=node1:5555,node3:5555
       - PYTHONUNBUFFERED=1
-    ports:
-      - "5002:5000"
     networks:
       - swarm-net
+    ports:
+      - "5002:5555"
 
   node3:
     build:
@@ -37,12 +37,12 @@ services:
     environment:
       - ROLE=node
       - NODE_ID=node3
-      - PEERS=http://node1:5000,http://node2:5000
+      - PEERS=node1:5555,node2:5555
       - PYTHONUNBUFFERED=1
-    ports:
-      - "5003:5000"
     networks:
       - swarm-net
+    ports:
+      - "5003:5555"
 
 networks:
   swarm-net:
