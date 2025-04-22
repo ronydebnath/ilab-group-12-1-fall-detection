@@ -52,7 +52,11 @@ def deserialize_weights(weights_str):
 
 def average_weights(weights_list):
     """Average a list of weight arrays."""
-    return [np.mean(w, axis=0) for w in zip(*weights_list)]
+    averaged = [np.mean(w, axis=0) for w in zip(*weights_list)]
+    print(f"\n{NODE_ID}: Averaged weights statistics:")
+    for i, w in enumerate(averaged):
+        print(f"  Layer {i}: shape={w.shape}, mean={w.mean():.6f}, std={w.std():.6f}")
+    return averaged
 
 # ----------------------------- ZeroMQ Server Logic -----------------------------
 
@@ -85,14 +89,24 @@ def run_zmq_server():
 
             if msg_type == "send_weight":
                 # Deserialize and store weights
+                sender_id = message.get("node_id", "unknown")
+                print(f"\n{NODE_ID}: Received weights from {sender_id}")
                 weights = deserialize_weights(message.get("weights"))
+                print(f"{NODE_ID}: Received weights statistics:")
+                for i, w in enumerate(weights):
+                    print(f"  Layer {i}: shape={w.shape}, mean={w.mean():.6f}, std={w.std():.6f}")
+                
                 received_weights.append(weights)
                 
                 # If we have weights from all peers, average them
-                if len(received_weights) == len(os.environ.get('PEERS', '').split(',')):
+                peers = os.environ.get('PEERS', '').split(',')
+                if peers and len(received_weights) == len(peers):
+                    print(f"\n{NODE_ID}: Received weights from all peers, performing aggregation")
                     averaged_weights = average_weights(received_weights)
                     model.set_weights(averaged_weights)
                     received_weights = []  # Clear the list for next round
+                else:
+                    print(f"{NODE_ID}: Waiting for more peers ({len(received_weights)}/{len(peers) if peers else 0})")
                 
                 socket.send_json({"status": "success"})
 

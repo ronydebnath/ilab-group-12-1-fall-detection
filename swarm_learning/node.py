@@ -125,7 +125,11 @@ def send_weights(peer, weights):
     socket  = context.socket(zmq.REQ)
     socket.RCVTIMEO = 3000
     try:
-        print(f"{NODE_ID}: Connecting to {peer}")
+        print(f"\n{NODE_ID}: Connecting to {peer}")
+        print(f"{NODE_ID}: Sending weights with shapes:")
+        for i, w in enumerate(weights):
+            print(f"  Layer {i}: shape={w.shape}, mean={w.mean():.6f}, std={w.std():.6f}")
+        
         socket.connect(f"tcp://{peer}")
         payload = {
             "type": "send_weight",
