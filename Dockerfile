@@ -29,4 +29,4 @@ ENV PYTHONPATH=/app
 EXPOSE 5555
 
 # Command to run the application
-CMD ["python", "swarm_learning/node.py"]
+CMD ["python", "swarm_learning/entrypoint.py"]
