@@ -8,6 +8,9 @@ import os
 import base64
 import json
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, LSTM, Dense, Dropout
 
 # Node identifier (can be set via environment variable)
 NODE_ID = os.environ.get("NODE_ID", "node_default")
@@ -29,17 +32,27 @@ lock = threading.Lock()
 
 # ----------------------------- Serialization Helpers -----------------------------
 
-def deserialize_weights(serialized):
-    """
-    Decode base64-encoded weight string and convert it back to a list of NumPy arrays.
-    """
-    return [np.array(w) for w in json.loads(base64.b64decode(serialized).decode())]
+def create_model(input_shape, num_classes):
+    model = Sequential([
+        Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=input_shape),
+        Conv1D(filters=128, kernel_size=3, activation='relu'),
+        MaxPooling1D(pool_size=2),
+        Conv1D(filters=128, kernel_size=3, activation='relu'),
+        LSTM(64),
+        Dense(64, activation='relu'),
+        Dropout(0.5),
+        Dense(num_classes, activation='softmax')
+    ])
+    return model
 
-def serialize_weights(weights):
-    """
-    Convert a list of NumPy arrays to a base64-encoded JSON string for transmission.
-    """
-    return base64.b64encode(json.dumps([w.tolist() for w in weights]).encode()).decode()
+def deserialize_weights(weights_str):
+    """Deserialize base64-encoded weights back into NumPy arrays."""
+    weights_list = json.loads(base64.b64decode(weights_str).decode())
+    return [np.array(w) for w in weights_list]
+
+def average_weights(weights_list):
+    """Average a list of weight arrays."""
+    return [np.mean(w, axis=0) for w in zip(*weights_list)]
 
 # ----------------------------- ZeroMQ Server Logic -----------------------------
 
@@ -58,39 +71,39 @@ def run_zmq_server():
 
     print(f"{NODE_ID}: ZeroMQ server running on port {ZMQ_PORT}")
 
+    # Initialize model (dummy initialization, will be updated with received weights)
+    model = create_model((25, 6), 16)  # Default shape, will be updated
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    
+    # Store received weights
+    received_weights = []
+
     while True:
         try:
             message = socket.recv_json()
             msg_type = message.get("type")
 
             if msg_type == "send_weight":
-                node_id = message.get("node_id")
+                # Deserialize and store weights
                 weights = deserialize_weights(message.get("weights"))
+                received_weights.append(weights)
+                
+                # If we have weights from all peers, average them
+                if len(received_weights) == len(os.environ.get('PEERS', '').split(',')):
+                    averaged_weights = average_weights(received_weights)
+                    model.set_weights(averaged_weights)
+                    received_weights = []  # Clear the list for next round
+                
+                socket.send_json({"status": "success"})
 
-                with lock:
-                    received_weights[node_id] = weights
-                    print(f"{NODE_ID}: Received weights from {node_id}")
-
-                socket.send_json({"status": "received"})
-
-            elif msg_type == "get_global_model":
-                with lock:
-                    payload = {
-                        "status": "ok",
-                        "model": serialize_weights(global_model) if global_model else None,
-                        "version": model_version
-                    }
-                socket.send_json(payload)
-
-            elif msg_type == "update_global_model":
-                new_model = deserialize_weights(message.get("model"))
-
-                with lock:
-                    global_model = new_model
-                    model_version += 1
-                    print(f"{NODE_ID}: Updated global model to version {model_version}")
-
-                socket.send_json({"status": "updated"})
+            elif msg_type == "get_model":
+                # Serialize and send current model weights
+                weights = model.get_weights()
+                weights_str = base64.b64encode(json.dumps([w.tolist() for w in weights]).encode()).decode()
+                socket.send_json({
+                    "status": "success",
+                    "weights": weights_str
+                })
 
             else:
                 print(f"{NODE_ID}: Unknown message type: {msg_type}")
