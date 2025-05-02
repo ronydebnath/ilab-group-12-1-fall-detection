@@ -4,7 +4,7 @@ services:
     environment:
       - NODE_ID=node1
       - PEERS=node2:5555,node3:5555
-      - DATA_PATH=/app/data/df_filtered_binary.pkl
+      - DATA_PATH=/app/data/MobiAct_combined.csv
     volumes:
       - ./data:/app/data:ro
     ports:
@@ -17,7 +17,7 @@ services:
     environment:
       - NODE_ID=node2
       - PEERS=node1:5555,node3:5555
-      - DATA_PATH=/app/data/df_filtered_binary.pkl
+      - DATA_PATH=/app/data/MobiAct_combined.csv
     volumes:
       - ./data:/app/data:ro
     ports:
@@ -30,7 +30,7 @@ services:
     environment:
       - NODE_ID=node3
       - PEERS=node1:5555,node2:5555
-      - DATA_PATH=/app/data/df_filtered_binary.pkl
+      - DATA_PATH=/app/data/MobiAct_combined.csv
     volumes:
       - ./data:/app/data:ro
     ports:
