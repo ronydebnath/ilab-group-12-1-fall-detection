@@ -57,7 +57,14 @@ def load_and_preprocess_data():
     print(f"{NODE_ID}: Loading data from {DATA_PATH}")
     if not os.path.isfile(DATA_PATH):
         raise FileNotFoundError(f"{NODE_ID}: Data file not found at {DATA_PATH}")
-    df = pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH, nrows=100000)
+
+    fall_labels = ['BSC', 'FKL', 'SDL', 'FOL']
+    post_fall = ['LYI']
+
+    df['fall_label'] = df['label'].apply(
+        lambda x: 'FALL' if x in fall_labels else ('POST_FALL' if x in post_fall else 'ADL')
+    )
     print(f"{NODE_ID}: Successfully loaded data ({len(df)} rows)")
     sensor_cols = ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z', 'azimuth', 'pitch', 'roll']
     # Standardize all 9 sensor columns

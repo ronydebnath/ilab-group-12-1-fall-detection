@@ -32,16 +32,20 @@ lock = threading.Lock()
 
 # ----------------------------- Serialization Helpers -----------------------------
 
-def create_model(input_shape, num_classes):
-    model = Sequential([
-        Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=input_shape),
-        Conv1D(filters=128, kernel_size=3, activation='relu'),
-        MaxPooling1D(pool_size=2),
-        Conv1D(filters=128, kernel_size=3, activation='relu'),
-        LSTM(64),
-        Dense(64, activation='relu'),
-        Dropout(0.5),
-        Dense(num_classes, activation='softmax')
+def create_model(input_shape):
+    """
+    Builds a CNN model for binary fall detection.
+    """
+    model = tf.keras.Sequential([
+        tf.keras.layers.Conv1D(64, 3, activation='relu', input_shape=input_shape),
+        tf.keras.layers.MaxPooling1D(2),
+        tf.keras.layers.Conv1D(64, 3, activation='relu'),
+        tf.keras.layers.MaxPooling1D(2),
+        tf.keras.layers.Conv1D(64, 3),
+        tf.keras.layers.GlobalAveragePooling1D(),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(1, activation='sigmoid')
     ])
     return model
 
@@ -75,12 +79,17 @@ def run_zmq_server():
 
     print(f"{NODE_ID}: ZeroMQ server running on port {ZMQ_PORT}")
 
-    # Initialize model (dummy initialization, will be updated with received weights)
-    model = create_model((25, 6), 16)  # Default shape, will be updated
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    # Initialize model with binary classification architecture
+    model = create_model((500, 9))  # Using the same input shape as in node.py
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss='binary_crossentropy',
+        metrics=['accuracy']
+    )
     
     # Store received weights
     received_weights = []
+    unique_peers = set()  # Track unique peers
 
     while True:
         try:
@@ -97,16 +106,18 @@ def run_zmq_server():
                     print(f"  Layer {i}: shape={w.shape}, mean={w.mean():.6f}, std={w.std():.6f}")
                 
                 received_weights.append(weights)
+                unique_peers.add(sender_id)  # Add peer to unique set
                 
                 # If we have weights from all peers, average them
                 peers = os.environ.get('PEERS', '').split(',')
-                if peers and len(received_weights) == len(peers):
+                if peers and len(unique_peers) == len(peers):
                     print(f"\n{NODE_ID}: Received weights from all peers, performing aggregation")
                     averaged_weights = average_weights(received_weights)
                     model.set_weights(averaged_weights)
                     received_weights = []  # Clear the list for next round
+                    unique_peers.clear()  # Clear unique peers for next round
                 else:
-                    print(f"{NODE_ID}: Waiting for more peers ({len(received_weights)}/{len(peers) if peers else 0})")
+                    print(f"{NODE_ID}: Waiting for more peers ({len(unique_peers)}/{len(peers) if peers else 0})")
                 
                 socket.send_json({"status": "success"})
 
