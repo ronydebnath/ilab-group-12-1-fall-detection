@@ -1,5 +1,5 @@
 # Use a NumPy release compatible with TensorFlow 2.16.1
-numpy==1.23.5
+numpy==1.26.4
 
 # Upgrade pandas so it can read your existing pickle
 pandas==1.5.3
