@@ -16,13 +16,13 @@ import base64
 import json
 import zmq
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split, GroupShuffleSplit
 from sklearn.utils import class_weight
 
 # Configuration from environment variables
 NODE_ID     = os.environ.get('NODE_ID', 'node_default')
-DATA_PATH   = os.environ.get('DATA_PATH', '/app/data/df_filtered_binary.pkl')
+DATA_PATH   = os.environ.get('DATA_PATH', '/app/data/MobiAct_combined.csv')
 peers_env   = os.environ.get('PEERS', '')
 PEERS       = [p.strip() for p in peers_env.split(',') if p.strip()] if peers_env else []
 ROUND_INTERVAL = 20        # seconds between training rounds
@@ -30,63 +30,69 @@ ZMQ_PORT       = 5555      # ZeroMQ communication port
 
 # ----------------------------- Data Loading and Preprocessing -----------------------------
 
-def create_windows(X, y, window_size=400, step_size=62, positive_label="FALL"):
+def create_windows(X, y, window_size=500, step_size=250):
     """
-    Creates overlapping windows from the sensor data with any-positive labeling.
+    Create windows for binary classification. Skip windows with both ADL and FALL.
     """
     X_windows, y_windows = [], []
-    
     for start in range(0, len(X) - window_size + 1, step_size):
         end = start + window_size
         window_data = X[start:end]
         window_labels = y[start:end]
-        
-        # any-positive labeling
-        if np.any(window_labels == positive_label):
-            label = positive_label
+        unique_labels = set(window_labels)
+        # Labeling logic: skip mixed ADL/FALL, label as FALL if any FALL present
+        if "ADL" in unique_labels and "FALL" in unique_labels:
+            continue
+        elif "FALL" in unique_labels:
+            label = "FALL"
+        elif "ADL" in unique_labels:
+            label = "ADL"
         else:
-            label = "ADL"  # default class
-
+            continue
         X_windows.append(window_data)
         y_windows.append(label)
-
     return np.array(X_windows), np.array(y_windows)
 
 def load_and_preprocess_data():
-    """
-    Loads the pickled DataFrame from DATA_PATH, creates overlapping windows,
-    encodes labels, and splits into train/test sets.
-    """
-    # 1. Load DataFrame
     print(f"{NODE_ID}: Loading data from {DATA_PATH}")
     if not os.path.isfile(DATA_PATH):
         raise FileNotFoundError(f"{NODE_ID}: Data file not found at {DATA_PATH}")
-    df = pd.read_pickle(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
     print(f"{NODE_ID}: Successfully loaded data ({len(df)} rows)")
-
-    # 2. Define sensor columns
     sensor_cols = ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z', 'azimuth', 'pitch', 'roll']
-
-    # 3. Split data into train/test sets
-    X_train, X_test, y_train, y_test = train_test_split(
-        df[sensor_cols], df['fall_label'], test_size=0.15, random_state=42
-    )
-
-    # 4. Create windows
-    X_train_windows, y_train_windows = create_windows(X_train, y_train)
-    X_test_windows, y_test_windows = create_windows(X_test, y_test)
-
-    # 5. Encode labels
+    # Standardize all 9 sensor columns
+    scaler = StandardScaler()
+    df[sensor_cols] = scaler.fit_transform(df[sensor_cols])
+    # Split by subject for better generalization (optional, but notebook does this)
+    groups = df['subject_id'].values
+    gss1 = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+    trainval_idx, test_idx = next(gss1.split(df, df['fall_label'], groups=groups))
+    trainval_subjects = df.iloc[trainval_idx]['subject_id'].unique()
+    test_subjects = df.iloc[test_idx]['subject_id'].unique()
+    df_trainval = df[df['subject_id'].isin(trainval_subjects)].copy()
+    df_test     = df[df['subject_id'].isin(test_subjects)].copy()
+    # 2nd split for val
+    groups_trainval = df_trainval['subject_id'].values
+    gss2 = GroupShuffleSplit(n_splits=1, test_size=0.125, random_state=42)
+    train_idx, val_idx = next(gss2.split(df_trainval, df_trainval['fall_label'], groups=groups_trainval))
+    train_subjects = df_trainval.iloc[train_idx]['subject_id'].unique()
+    val_subjects   = df_trainval.iloc[val_idx]['subject_id'].unique()
+    df_train = df_trainval[df_trainval['subject_id'].isin(train_subjects)].copy()
+    df_val   = df_trainval[df_trainval['subject_id'].isin(val_subjects)].copy()
+    # Windowing
+    X_train, y_train = create_windows(df_train[sensor_cols].values, df_train['fall_label'].values)
+    X_val, y_val     = create_windows(df_val[sensor_cols].values, df_val['fall_label'].values)
+    X_test, y_test   = create_windows(df_test[sensor_cols].values, df_test['fall_label'].values)
+    # Encode labels
     label_map = {'ADL': 0, 'FALL': 1}
-    y_train_encoded = np.vectorize(label_map.get)(y_train_windows)
-    y_test_encoded = np.vectorize(label_map.get)(y_test_windows)
-
-    print(f"{NODE_ID}: Data preprocessing completed. Train shape: {X_train_windows.shape}")
-
-    return X_train_windows, X_test_windows, y_train_encoded, y_test_encoded
+    y_train_encoded = np.vectorize(label_map.get)(y_train)
+    y_val_encoded   = np.vectorize(label_map.get)(y_val)
+    y_test_encoded  = np.vectorize(label_map.get)(y_test)
+    print(f"{NODE_ID}: Data preprocessing completed. Train shape: {X_train.shape}")
+    return X_train, X_val, X_test, y_train_encoded, y_val_encoded, y_test_encoded
 
 # Load data once at startup
-X_train, X_test, y_train, y_test = load_and_preprocess_data()
+X_train, X_val, X_test, y_train, y_val, y_test = load_and_preprocess_data()
 
 # ----------------------------- Model Definition -----------------------------
 
@@ -95,25 +101,24 @@ def create_model(input_shape):
     Builds a CNN model for binary fall detection.
     """
     model = tf.keras.Sequential([
-        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu', input_shape=input_shape),
-        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
-        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
-        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
-        tf.keras.layers.Flatten(),
+        tf.keras.layers.Conv1D(64, 3, activation='relu', input_shape=input_shape),
+        tf.keras.layers.MaxPooling1D(2),
+        tf.keras.layers.Conv1D(64, 3, activation='relu'),
+        tf.keras.layers.MaxPooling1D(2),
+        tf.keras.layers.Conv1D(64, 3),
+        tf.keras.layers.GlobalAveragePooling1D(),
+        tf.keras.layers.BatchNormalization(),
         tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(1, activation='sigmoid')  # Binary output
+        tf.keras.layers.Dense(1, activation='sigmoid')
     ])
     return model
 
 # Compute class weights
+y_train_array = np.array(y_train)
 class_weights = class_weight.compute_class_weight(
     class_weight='balanced',
-    classes=np.unique(y_train),
-    y=y_train
+    classes=np.unique(y_train_array),
+    y=y_train_array
 )
 class_weights = dict(enumerate(class_weights))
 
@@ -122,7 +127,7 @@ model = create_model((X_train.shape[1], X_train.shape[2]))
 model.compile(
     optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
     loss='binary_crossentropy',
-    metrics=[tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
+    metrics=['accuracy']
 )
 
 # ----------------------------- Utility Functions -----------------------------
@@ -176,15 +181,10 @@ def send_weights(peer, weights):
 if __name__ == "__main__":
     print(f"{NODE_ID}: Starting training loop with peers: {PEERS}")
     while True:
-        # 1. Local training
         print(f"{NODE_ID}: Before training")
-        model.fit(X_train, y_train, epochs=1, batch_size=64, class_weight=class_weights, verbose=0)
+        model.fit(X_train, y_train, epochs=1, batch_size=64, class_weight=class_weights, verbose=0, validation_data=(X_val, y_val))
         print(f"{NODE_ID}: After training")
-
-        # 2. Prepare and send noisy weights
         noisy = add_noise(model.get_weights())
         for peer in PEERS:
             send_weights(peer, noisy)
-
-        # 3. Wait for next round
         time.sleep(ROUND_INTERVAL)
