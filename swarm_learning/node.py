@@ -18,16 +18,39 @@ import zmq
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight
 
 # Configuration from environment variables
 NODE_ID     = os.environ.get('NODE_ID', 'node_default')
-DATA_PATH   = os.environ.get('DATA_PATH', '/app/data/df_filtered_cnn.pkl')
+DATA_PATH   = os.environ.get('DATA_PATH', '/app/data/df_filtered_binary.pkl')
 peers_env   = os.environ.get('PEERS', '')
 PEERS       = [p.strip() for p in peers_env.split(',') if p.strip()] if peers_env else []
 ROUND_INTERVAL = 20        # seconds between training rounds
 ZMQ_PORT       = 5555      # ZeroMQ communication port
 
 # ----------------------------- Data Loading and Preprocessing -----------------------------
+
+def create_windows(X, y, window_size=400, step_size=62, positive_label="FALL"):
+    """
+    Creates overlapping windows from the sensor data with any-positive labeling.
+    """
+    X_windows, y_windows = [], []
+    
+    for start in range(0, len(X) - window_size + 1, step_size):
+        end = start + window_size
+        window_data = X[start:end]
+        window_labels = y[start:end]
+        
+        # any-positive labeling
+        if np.any(window_labels == positive_label):
+            label = positive_label
+        else:
+            label = "ADL"  # default class
+
+        X_windows.append(window_data)
+        y_windows.append(label)
+
+    return np.array(X_windows), np.array(y_windows)
 
 def load_and_preprocess_data():
     """
@@ -42,63 +65,64 @@ def load_and_preprocess_data():
     print(f"{NODE_ID}: Successfully loaded data ({len(df)} rows)")
 
     # 2. Define sensor columns
-    sensor_cols = ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z']
+    sensor_cols = ['acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z', 'azimuth', 'pitch', 'roll']
 
-    # 3. Create sliding windows with majority-voted labels
-    def create_windows(data, window_size=25, step_size=12):
-        X, y = [], []
-        arr   = data[sensor_cols].values
-        labs  = data['label'].values
-        for start in range(0, len(data) - window_size + 1, step_size):
-            end = start + window_size
-            window_data   = arr[start:end]
-            window_labels = labs[start:end]
-            # majority vote
-            uniq, cnts = np.unique(window_labels, return_counts=True)
-            label = uniq[np.argmax(cnts)]
-            X.append(window_data)
-            y.append(label)
-        return np.array(X), np.array(y)
-
-    X, y = create_windows(df)
-    le    = LabelEncoder()
-    y_enc = le.fit_transform(y)
-
-    # 4. Split into train/test
+    # 3. Split data into train/test sets
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y_enc, test_size=0.15, random_state=42
+        df[sensor_cols], df['fall_label'], test_size=0.15, random_state=42
     )
-    print(f"{NODE_ID}: Data preprocessing completed. Train shape: {X_train.shape}")
 
-    return X_train, X_test, y_train, y_test, len(np.unique(y_enc))
+    # 4. Create windows
+    X_train_windows, y_train_windows = create_windows(X_train, y_train)
+    X_test_windows, y_test_windows = create_windows(X_test, y_test)
+
+    # 5. Encode labels
+    label_map = {'ADL': 0, 'FALL': 1}
+    y_train_encoded = np.vectorize(label_map.get)(y_train_windows)
+    y_test_encoded = np.vectorize(label_map.get)(y_test_windows)
+
+    print(f"{NODE_ID}: Data preprocessing completed. Train shape: {X_train_windows.shape}")
+
+    return X_train_windows, X_test_windows, y_train_encoded, y_test_encoded
 
 # Load data once at startup
-X_train, X_test, y_train, y_test, num_classes = load_and_preprocess_data()
+X_train, X_test, y_train, y_test = load_and_preprocess_data()
 
 # ----------------------------- Model Definition -----------------------------
 
-def create_model(input_shape, num_classes):
+def create_model(input_shape):
     """
-    Builds a CNN-LSTM model for fall detection.
+    Builds a CNN model for binary fall detection.
     """
     model = tf.keras.Sequential([
-        tf.keras.layers.Conv1D(64, 3, activation='relu', input_shape=input_shape),
-        tf.keras.layers.Conv1D(128, 3, activation='relu'),
-        tf.keras.layers.MaxPooling1D(2),
-        tf.keras.layers.Conv1D(128, 3, activation='relu'),
-        tf.keras.layers.LSTM(64),
-        tf.keras.layers.Dense(64, activation='relu'),
+        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu', input_shape=input_shape),
+        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
+        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
+        tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
+        tf.keras.layers.Flatten(),
         tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(num_classes, activation='softmax')
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(1, activation='sigmoid')  # Binary output
     ])
     return model
 
+# Compute class weights
+class_weights = class_weight.compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(y_train),
+    y=y_train
+)
+class_weights = dict(enumerate(class_weights))
+
 # Instantiate and compile model
-model = create_model((X_train.shape[1], X_train.shape[2]), num_classes)
+model = create_model((X_train.shape[1], X_train.shape[2]))
 model.compile(
-    optimizer='adam',
-    loss='sparse_categorical_crossentropy',
-    metrics=['accuracy']
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    loss='binary_crossentropy',
+    metrics=[tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
 )
 
 # ----------------------------- Utility Functions -----------------------------
@@ -154,7 +178,7 @@ if __name__ == "__main__":
     while True:
         # 1. Local training
         print(f"{NODE_ID}: Before training")
-        model.fit(X_train, y_train, epochs=1, batch_size=32, verbose=0)
+        model.fit(X_train, y_train, epochs=1, batch_size=64, class_weight=class_weights, verbose=0)
         print(f"{NODE_ID}: After training")
 
         # 2. Prepare and send noisy weights
