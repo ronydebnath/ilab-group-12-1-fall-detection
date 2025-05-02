@@ -1,5 +1,30 @@
 # Changelog
 
+## [Unreleased] - 2025-04-23
+
+### 🔧 Modified
+
+- **Model Architecture Alignment**
+  - Synchronized model architectures between `node.py` and `node_server.py`
+  - Updated `node_server.py` to use binary classification model
+  - Fixed weight count mismatch (12 vs 13 layers)
+  - Standardized input shape to (500, 9) across all nodes
+  - Aligned optimizer and loss function configurations
+
+- **Peer Communication**
+  - Implemented unique peer tracking using sets
+  - Fixed peer counting logic to prevent duplicate counting
+  - Added peer set clearing after successful aggregation
+  - Improved peer status reporting accuracy
+
+### 📁 Affected Files
+
+- `node_server.py`
+  - Updated model architecture to match `node.py`
+  - Added unique peer tracking mechanism
+  - Fixed weight aggregation logic
+  - Standardized model compilation parameters
+
 ## [Unreleased] - 2025-04-22
 
 ### ✅ Added
