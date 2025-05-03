@@ -34,12 +34,14 @@ class FallEvent extends Model
         'status',
         'sensor_data',
         'notes',
+        'false_alarm',
     ];
 
     protected $casts = [
         'detected_at' => 'datetime',
         'resolved_at' => 'datetime',
         'sensor_data' => 'array',
+        'false_alarm' => 'boolean',
     ];
 
     public function elderly()
