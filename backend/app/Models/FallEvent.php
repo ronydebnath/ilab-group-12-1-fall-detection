@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\AlertSystemService;
 
 /**
  * @OA\Schema(
@@ -47,5 +48,14 @@ class FallEvent extends Model
     public function elderly()
     {
         return $this->belongsTo(ElderlyProfile::class, 'elderly_id');
+    }
+
+    protected static function booted()
+    {
+        static::updated(function (FallEvent $fallEvent) {
+            if (in_array($fallEvent->status, ['detected', 'alerted'])) {
+                app(AlertSystemService::class)->processFallEvent($fallEvent);
+            }
+        });
     }
 }
