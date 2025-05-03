@@ -25,10 +25,10 @@ class FallEventResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('elderly_id')
-                    ->relationship('elderly', 'full_name')
+                    ->label('Elderly')
+                    ->options(fn () => \App\Models\ElderlyProfile::all()->pluck('full_name', 'id')->toArray())
                     ->required()
-                    ->searchable()
-                    ->preload(),
+                    ->searchable(),
                 Forms\Components\DateTimePicker::make('detected_at')
                     ->required(),
                 Forms\Components\DateTimePicker::make('resolved_at'),
