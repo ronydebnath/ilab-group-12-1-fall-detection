@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('carers', function (Blueprint $table) {
+        // Create pivot table for elderly-carer relationships
+        Schema::create('carer_elderly', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('email')->unique();
-            $table->string('phone_number');
-            $table->string('password');
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('carer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('elderly_id')->constrained('elderly')->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -30,6 +26,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('carer_elderly');
-        Schema::dropIfExists('carers');
     }
 };
