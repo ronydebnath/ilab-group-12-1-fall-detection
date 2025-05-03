@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ElderlyProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FallEventController;
+
 
 // Public routes
 Route::prefix('v1')->group(function () {
@@ -16,5 +18,8 @@ Route::prefix('v1')->group(function () {
 
         // Elderly Profiles Routes
         Route::apiResource('elderly-profiles', ElderlyProfileController::class);
+
+        Route::apiResource('fall-events', FallEventController::class);
+        Route::patch('fall-events/{fallEvent}/false-alarm', [FallEventController::class, 'markFalseAlarm']);
     });
 }); 
