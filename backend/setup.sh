@@ -5,10 +5,10 @@ if [ ! -f "composer.json" ]; then
     composer create-project laravel/laravel .
 fi
 
-# Install Filament
-composer require filament/filament:"^3.2"
+# Install Filament and its dependencies
+composer require filament/filament:"^3.2" --with-all-dependencies
 
-# Install Filament dependencies
+# Install Filament
 php artisan filament:install --panels
 
 # Create admin user
