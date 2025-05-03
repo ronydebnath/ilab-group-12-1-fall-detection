@@ -56,4 +56,77 @@ class User extends Authenticatable implements FilamentUser, CanResetPasswordCont
     {
         return $this->role === 'admin';
     }
+
+    /**
+     * Get the carer profile associated with the user.
+     */
+    public function carerProfile()
+    {
+        return $this->hasOne(CarerProfile::class);
+    }
+
+    /**
+     * Get the elderly profiles where this user is the primary carer.
+     */
+    public function primaryElderlyProfiles()
+    {
+        return $this->hasMany(ElderlyProfile::class, 'primary_carer_id');
+    }
+
+    /**
+     * Get the elderly profiles where this user is the secondary carer.
+     */
+    public function secondaryElderlyProfiles()
+    {
+        return $this->hasMany(ElderlyProfile::class, 'secondary_carer_id');
+    }
+
+    /**
+     * Check if the user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user is a carer.
+     */
+    public function isCarer(): bool
+    {
+        return $this->role === 'carer';
+    }
+
+    /**
+     * Get all permissions for the user based on their role.
+     */
+    public function getPermissions(): array
+    {
+        return match($this->role) {
+            'admin' => [
+                'manage_users',
+                'manage_carers',
+                'manage_elderly',
+                'view_all_profiles',
+                'manage_settings',
+                'view_analytics',
+            ],
+            'carer' => [
+                'view_assigned_elderly',
+                'update_elderly_status',
+                'manage_fall_events',
+                'view_own_profile',
+                'update_own_profile',
+            ],
+            default => [],
+        };
+    }
+
+    /**
+     * Check if the user has a specific permission.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return in_array($permission, $this->getPermissions());
+    }
 }
