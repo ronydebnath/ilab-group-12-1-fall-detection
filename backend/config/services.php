@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'),
+    ],
+
+    'fcm' => [
+        'key' => env('FCM_SERVER_KEY'),
+    ],
+
 ];

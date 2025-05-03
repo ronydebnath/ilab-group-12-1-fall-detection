@@ -4,7 +4,11 @@ namespace App\Services;
 
 use App\Models\AlertSystemConfig;
 use App\Models\FallEvent;
+use App\Notifications\FallDetectedEmail;
+use App\Notifications\FallDetectedPush;
+use App\Notifications\FallDetectedSMS;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class AlertSystemService
 {
@@ -21,14 +25,15 @@ class AlertSystemService
     public function processFallEvent(FallEvent $fallEvent): void
     {
         if (!$this->config->is_active) {
-            Log::info('Alert system is currently disabled');
+            Log::info('Alert system is disabled');
             return;
         }
 
-        // Check if the fall event has been in the same state for longer than the threshold
+        // Check if the event has been in the same state longer than the threshold
+        $threshold = $this->config->settings['alert_threshold'] ?? 30;
         $timeInState = now()->diffInSeconds($fallEvent->updated_at);
-        
-        if ($timeInState >= $this->config->settings['alert_threshold']) {
+
+        if ($timeInState >= $threshold) {
             $this->sendAlerts($fallEvent);
         }
     }
@@ -38,48 +43,37 @@ class AlertSystemService
      */
     protected function sendAlerts(FallEvent $fallEvent): void
     {
-        $channels = $this->config->settings['notification_channels'];
         $elderly = $fallEvent->elderlyProfile;
+        $channels = $this->config->settings['notification_channels'] ?? ['email'];
 
         foreach ($channels as $channel) {
             try {
-                match ($channel) {
-                    'email' => $this->sendEmailAlert($fallEvent, $elderly),
-                    'sms' => $this->sendSmsAlert($fallEvent, $elderly),
-                    'push' => $this->sendPushAlert($fallEvent, $elderly),
-                    default => Log::warning("Unknown notification channel: {$channel}"),
-                };
+                switch ($channel) {
+                    case 'email':
+                        if ($elderly->email) {
+                            Notification::route('mail', $elderly->email)
+                                ->notify(new FallDetectedEmail($fallEvent));
+                        }
+                        break;
+
+                    case 'sms':
+                        if ($elderly->phone) {
+                            Notification::route('twilio', $elderly->phone)
+                                ->notify(new FallDetectedSMS($fallEvent));
+                        }
+                        break;
+
+                    case 'push':
+                        if ($elderly->device_token) {
+                            Notification::route('fcm', $elderly->device_token)
+                                ->notify(new FallDetectedPush($fallEvent));
+                        }
+                        break;
+                }
             } catch (\Exception $e) {
-                Log::error("Failed to send {$channel} alert: " . $e->getMessage());
+                Log::error("Failed to send {$channel} notification: " . $e->getMessage());
             }
         }
-    }
-
-    /**
-     * Send email alerts to configured contacts
-     */
-    protected function sendEmailAlert(FallEvent $fallEvent, $elderly): void
-    {
-        // TODO: Implement email notification logic
-        Log::info('Email alert would be sent for fall event: ' . $fallEvent->id);
-    }
-
-    /**
-     * Send SMS alerts to configured contacts
-     */
-    protected function sendSmsAlert(FallEvent $fallEvent, $elderly): void
-    {
-        // TODO: Implement SMS notification logic
-        Log::info('SMS alert would be sent for fall event: ' . $fallEvent->id);
-    }
-
-    /**
-     * Send push notifications to configured devices
-     */
-    protected function sendPushAlert(FallEvent $fallEvent, $elderly): void
-    {
-        // TODO: Implement push notification logic
-        Log::info('Push notification would be sent for fall event: ' . $fallEvent->id);
     }
 
     /**
