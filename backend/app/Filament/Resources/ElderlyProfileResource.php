@@ -241,6 +241,7 @@ class ElderlyProfileResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -263,6 +264,7 @@ class ElderlyProfileResource extends Resource
         return [
             'index' => Pages\ListElderlyProfiles::route('/'),
             'create' => Pages\CreateElderlyProfile::route('/create'),
+            'view' => Pages\ViewElderlyProfile::route('/{record}'),
             'edit' => Pages\EditElderlyProfile::route('/{record}/edit'),
         ];
     }
