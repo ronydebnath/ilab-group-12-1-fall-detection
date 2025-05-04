@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FallEventResource\Pages;
 use App\Models\FallEvent;
 use App\Models\User;
+use App\Models\ElderlyProfile;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -29,8 +30,9 @@ class FallEventResource extends Resource
                 Forms\Components\Select::make('elderly_id')
                     ->label('Elderly Person')
                     ->options(
-                        User::where('role', 'elderly')
-                            ->pluck('name', 'id')
+                        ElderlyProfile::with('user')->get()->mapWithKeys(function ($profile) {
+                            return [$profile->id => optional($profile->user)->name ?: 'Unknown'];
+                        })
                     )
                     ->required()
                     ->searchable(),

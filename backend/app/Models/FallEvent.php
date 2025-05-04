@@ -73,7 +73,7 @@ class FallEvent extends Model
      */
     public function elderly(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'elderly_id');
+        return $this->belongsTo(\App\Models\ElderlyProfile::class, 'elderly_id');
     }
 
     /**
