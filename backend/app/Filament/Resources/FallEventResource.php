@@ -55,7 +55,8 @@ class FallEventResource extends Resource
                     ->required()
                     ->default('detected'),
                 Forms\Components\Textarea::make('notes')
-                    ->rows(3),
+                    ->rows(3)
+                    ->required(fn (Forms\Get $get) => $get('status') === 'false_alarm'),
                 Forms\Components\Select::make('resolved_by')
                     ->label('Resolved By')
                     ->options(
@@ -91,7 +92,9 @@ class FallEventResource extends Resource
                         'warning' => 'confirmed',
                         'success' => 'resolved',
                         'gray' => 'false_alarm',
-                    ]),
+                    ])
+                    ->label('Status')
+                    ->formatStateUsing(fn ($state) => $state === 'false_alarm' ? 'False Alarm' : ucfirst($state)),
                 Tables\Columns\TextColumn::make('resolvedBy.name')
                     ->label('Resolved By')
                     ->searchable()
@@ -109,21 +112,54 @@ class FallEventResource extends Resource
                         'false_alarm' => 'False Alarm',
                         'resolved' => 'Resolved',
                     ]),
+                Tables\Filters\TernaryFilter::make('false_alarm_only')
+                    ->label('Show Only False Alarms')
+                    ->queries(
+                        true: fn ($query) => $query->where('status', 'false_alarm'),
+                        false: fn ($query) => $query->where('status', '!=', 'false_alarm'),
+                    ),
                 Tables\Filters\SelectFilter::make('elderly_id')
                     ->label('Elderly Person')
                     ->options(
-                        User::where('role', 'elderly')
-                            ->pluck('name', 'id')
+                        ElderlyProfile::with('user')->get()->mapWithKeys(function ($profile) {
+                            return [$profile->id => optional($profile->user)->name ?: 'Unknown'];
+                        })
                     )
                     ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('markFalseAlarm')
+                    ->label('Mark as False Alarm')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('gray')
+                    ->visible(fn ($record) => $record->status !== 'false_alarm')
+                    ->requiresConfirmation()
+                    ->form([
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Reason/Notes')
+                            ->required()
+                    ])
+                    ->action(function ($record, $data) {
+                        $record->update([
+                            'status' => 'false_alarm',
+                            'notes' => $data['notes'],
+                        ]);
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('bulkFalseAlarm')
+                        ->label('Mark as False Alarm')
+                        ->icon('heroicon-o-x-circle')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update(['status' => 'false_alarm']);
+                            }
+                        }),
                 ]),
             ]);
     }
