@@ -10,12 +10,13 @@ class CreateFallEvent extends CreateRecord
 {
     protected static string $resource = FallEventResource::class;
 
-    protected function afterCreate(): void
+    protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
-        parent::afterCreate();
+        $record = parent::handleRecordCreation($data);
         // Send notifications if status is 'detected'
-        if ($this->record->status === 'detected') {
-            app(AlertSystemService::class)->processFallEvent($this->record);
+        if ($record->status === 'detected') {
+            app(\App\Services\AlertSystemService::class)->processFallEvent($record);
         }
+        return $record;
     }
 }
