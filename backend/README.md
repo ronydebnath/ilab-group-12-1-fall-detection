@@ -1,61 +1,208 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Fall Detection Backend Application
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Overview
+This backend application is built with Laravel and provides APIs and admin management for fall detection, elderly profiles, event logging, and a configurable alert system supporting email, SMS, and push notifications.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Table of Contents
+- [Setup](#setup)
+- [Environment Configuration](#environment-configuration)
+- [Database Migrations](#database-migrations)
+- [Modules & Usage](#modules--usage)
+  - [Elderly Profiles](#elderly-profiles)
+  - [Fall Events](#fall-events)
+  - [Alert System Config](#alert-system-config)
+  - [Notifications](#notifications)
+- [Testing Notifications](#testing-notifications)
+- [Admin Panel (Filament)](#admin-panel-filament)
+- [API Documentation (Swagger)](#api-documentation-swagger)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Setup
 
-## Learning Laravel
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-org/fall-detection-backend.git
+   cd fall-detection-backend/backend
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+2. **Install dependencies:**
+   ```bash
+   composer install
+   ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3. **Copy and edit environment file:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your database and mail/SMS/FCM credentials
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+4. **Generate application key:**
+   ```bash
+   php artisan key:generate
+   ```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Environment Configuration
 
-### Premium Partners
+Example `.env` values for notifications:
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_mailtrap_user
+MAIL_PASSWORD=your_mailtrap_pass
+MAIL_FROM_ADDRESS=no-reply@fallapp.com
+MAIL_FROM_NAME="Fall Detection System"
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+TWILIO_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_TOKEN=your_twilio_token
+TWILIO_FROM=+15551234567
 
-## Contributing
+FCM_SERVER_KEY=AAAA...your_fcm_server_key
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Database Migrations
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Run all migrations:
+```bash
+php artisan migrate
+```
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Modules & Usage
 
-## License
+### Elderly Profiles
+Represents monitored individuals.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**Example:**
+```php
+ElderlyProfile::create([
+    'name' => 'John Doe',
+    'age' => 78,
+    'gender' => 'male',
+    'address' => '123 Main St, Springfield',
+    'phone' => '+15551234567',
+    'email' => 'johndoe@example.com',
+    'device_token' => 'fcm_device_token_123',
+]);
+```
+
+---
+
+### Fall Events
+Logs detected or reported falls.
+
+**Example:**
+```php
+FallEvent::create([
+    'elderly_id' => 1, // John Doe's ID
+    'location' => 'Living Room',
+    'status' => 'detected', // detected | confirmed | false_alarm | alerted
+    'details' => 'Fall detected by sensor at 14:32',
+]);
+```
+
+---
+
+### Alert System Config
+Configures how and when alerts are sent.
+
+**Example:**
+```php
+AlertSystemConfig::create([
+    'name' => 'default',
+    'description' => 'Default alert system configuration',
+    'settings' => [
+        'notification_channels' => ['email', 'sms', 'push'],
+        'alert_threshold' => 30, // seconds
+        'escalation_delay' => 300, // seconds
+        'max_escalation_level' => 2,
+        'contact_priority' => [
+            'primary' => true,
+            'secondary' => true,
+            'emergency' => false,
+        ],
+    ],
+    'is_active' => true,
+]);
+```
+
+---
+
+### Notifications
+Notifications are sent automatically when a fall event is detected and meets the alert threshold.
+
+**Channels:**
+- **Email:** Sent to the elderly's `email` using Mailtrap (for testing)
+- **SMS:** Sent to the elderly's `phone` using Twilio (sandbox or live)
+- **Push:** Sent to the elderly's `device_token` using FCM
+
+**Example Notification Payloads:**
+- **Email:**
+  > Subject: Fall Detection Alert
+  >
+  > A fall has been detected for John Doe.
+  > Time: 2024-05-03 14:32:00
+  > Location: Living Room
+  > Status: detected
+  > [View Details](https://your-app.com/admin/fall-events/1)
+
+- **SMS:**
+  > FALL ALERT: John Doe has fallen at Living Room. Time: 14:32:00. Status: detected. Please check immediately.
+
+- **Push:**
+  > Title: Fall Detection Alert
+  > Body: John Doe has fallen at Living Room
+  > Data: { event_id: 1, elderly_id: 1, status: 'detected', location: 'Living Room', timestamp: '2024-05-03T14:32:00Z' }
+
+---
+
+## Testing Notifications
+
+You can test notifications without a mobile app:
+
+1. **Email:** Check your Mailtrap inbox for messages.
+2. **SMS:** Use a Twilio-verified phone number and check Twilio's dashboard for sent messages.
+3. **Push:** Use FCM's dry-run mode or inspect the HTTP response in logs.
+
+**Manual Test via Tinker:**
+```php
+php artisan tinker
+
+$p = App\Models\ElderlyProfile::first();
+$e = App\Models\FallEvent::create([
+    'elderly_id' => $p->id,
+    'location' => 'Kitchen',
+    'status' => 'detected',
+    'details' => 'Fall detected by sensor at 15:00',
+]);
+$e->updated_at = now()->subSeconds(31); $e->save();
+app(App\Services\AlertSystemService::class)->processFallEvent($e);
+```
+
+---
+
+## Admin Panel (Filament)
+
+- Access the admin panel at `/admin`.
+- Manage Elderly Profiles, Fall Events, and Alert System Configs.
+- Use the UI to create, edit, and delete records.
+
+---
+
+## API Documentation (Swagger)
+
+- The API is documented using OpenAPI/Swagger annotations.
+- Access the docs at `/api/documentation` (if enabled).
+
+---
+
+## Support
+For questions or issues, please open an issue on the repository or contact the maintainers.
