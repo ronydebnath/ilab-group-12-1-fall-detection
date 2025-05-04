@@ -1,0 +1,6 @@
+{
+  "accuracy": 0.9508,
+  "sensitivity": 0.926,
+  "specificity": 0.9523,
+  "false_alarm_rate": 0.0477
+}
