@@ -76,6 +76,7 @@ class FallEventResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('elderly.name')
                     ->label('Elderly Person')
+                    ->getStateUsing(fn ($record) => optional(optional($record->elderly)->user)->name)
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('detected_at')
