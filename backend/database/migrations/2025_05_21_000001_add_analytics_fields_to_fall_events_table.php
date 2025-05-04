@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fall_events', function (Blueprint $table) {
+            
             // Add fields for better analytics and reporting
             $table->string('detection_method')->nullable()->after('confidence_score'); // e.g., 'sensor', 'manual', 'ai'
             $table->string('location_description')->nullable()->after('location'); // Human-readable location
@@ -28,6 +29,18 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fall_events', function (Blueprint $table) {
+            // Drop indexes safely
+            if (Schema::hasIndex('fall_events', 'fall_events_detection_method_index')) {
+                $table->dropIndex('fall_events_detection_method_index');
+            }
+            if (Schema::hasIndex('fall_events', 'fall_events_severity_level_index')) {
+                $table->dropIndex('fall_events_severity_level_index');
+            }
+            if (Schema::hasIndex('fall_events', 'fall_events_required_medical_attention_index')) {
+                $table->dropIndex('fall_events_required_medical_attention_index');
+            }
+
+            // Drop columns
             $table->dropColumn([
                 'detection_method',
                 'location_description',
@@ -37,10 +50,6 @@ return new class extends Migration
                 'medical_notes',
                 'required_medical_attention'
             ]);
-            
-            $table->dropIndex(['detection_method']);
-            $table->dropIndex(['severity_level']);
-            $table->dropIndex(['required_medical_attention']);
         });
     }
 }; 

@@ -13,14 +13,20 @@ return new class extends Migration
     {
         Schema::create('fall_events', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('elderly_id')->constrained('elderly')->onDelete('cascade');
+            $table->foreignId('elderly_id')->constrained('users')->onDelete('cascade');
             $table->timestamp('detected_at');
-            $table->timestamp('resolved_at')->nullable();
-            $table->enum('status', ['detected', 'safe', 'alerted', 'resolved'])->default('detected');
-            $table->json('sensor_data')->nullable();
+            $table->decimal('confidence_score', 5, 2)->nullable(); // Detection confidence 0-100%
+            $table->json('location')->nullable(); // GPS coordinates JSON
+            $table->json('sensor_data')->nullable(); // JSON string of sensor readings
+            $table->enum('status', ['detected', 'confirmed', 'false_alarm', 'safe', 'alerted', 'resolved'])->default('detected');
             $table->text('notes')->nullable();
+            $table->foreignId('resolved_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            // Indexes for faster queries
+            $table->index(['elderly_id', 'detected_at']);
+            $table->index('status');
         });
 
         // Create table for fall event notifications
