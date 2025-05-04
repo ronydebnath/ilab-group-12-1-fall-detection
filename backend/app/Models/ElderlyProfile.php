@@ -69,8 +69,6 @@ class ElderlyProfile extends Model
 
     protected $fillable = [
         'user_id',
-        'first_name',
-        'last_name',
         'date_of_birth',
         'gender',
         'profile_photo',
@@ -150,7 +148,7 @@ class ElderlyProfile extends Model
      */
     public function getFullNameAttribute()
     {
-        return "{$this->first_name} {$this->last_name}";
+        return $this->user ? $this->user->name : null;
     }
 
     /**

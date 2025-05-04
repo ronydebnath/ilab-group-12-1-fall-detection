@@ -24,12 +24,12 @@ class ElderlyProfileResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Basic Information')
                     ->schema([
-                        Forms\Components\TextInput::make('first_name')
+                        Forms\Components\Select::make('user_id')
+                            ->label('User')
+                            ->relationship('user', 'name')
                             ->required()
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('last_name')
-                            ->required()
-                            ->maxLength(255),
+                            ->searchable()
+                            ->preload(),
                         Forms\Components\DatePicker::make('date_of_birth')
                             ->required()
                             ->maxDate(now()),
@@ -122,7 +122,14 @@ class ElderlyProfileResource extends Resource
                             ->relationship('primaryCarer', 'name')
                             ->required()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->rule(function (callable $get) {
+                                return function ($attribute, $value, $fail) use ($get) {
+                                    if ($value && $get('user_id') && $value == $get('user_id')) {
+                                        $fail('The elderly person cannot be their own primary carer.');
+                                    }
+                                };
+                            }),
                         Forms\Components\Select::make('secondary_carer_id')
                             ->relationship('secondaryCarer', 'name')
                             ->searchable()
@@ -195,8 +202,9 @@ class ElderlyProfileResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('full_name')
-                    ->searchable(['first_name', 'last_name'])
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('age')
                     ->sortable(),
