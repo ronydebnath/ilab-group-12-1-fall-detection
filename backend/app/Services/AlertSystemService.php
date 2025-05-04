@@ -64,8 +64,8 @@ class AlertSystemService
                         break;
 
                     case 'push':
-                        if ($elderly->device_token) {
-                            Notification::route('fcm', $elderly->device_token)
+                        if ($elderly->user && $elderly->user->device_token) {
+                            Notification::route('fcm', $elderly->user->device_token)
                                 ->notify(new FallDetectedPush($fallEvent));
                         }
                         break;

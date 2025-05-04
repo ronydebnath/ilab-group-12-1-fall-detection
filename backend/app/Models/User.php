@@ -20,6 +20,7 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
  *     @OA\Property(property="name", type="string", example="John Doe"),
  *     @OA\Property(property="email", type="string", format="email", example="john@example.com"),
  *     @OA\Property(property="role", type="string", enum={"admin", "carer", "elderly"}, example="elderly"),
+ *     @OA\Property(property="device_token", type="string", nullable=true, example="fcm_token_here"),
  *     @OA\Property(property="email_verified_at", type="string", format="date-time", nullable=true),
  *     @OA\Property(property="created_at", type="string", format="date-time"),
  *     @OA\Property(property="updated_at", type="string", format="date-time"),
@@ -50,6 +51,7 @@ class User extends Authenticatable implements FilamentUser, CanResetPasswordCont
         'email',
         'password',
         'role',
+        'device_token',
     ];
 
     /**

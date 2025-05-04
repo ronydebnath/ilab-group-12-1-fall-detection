@@ -286,6 +286,86 @@
                 ]
             }
         },
+        "/device-token": {
+            "post": {
+                "tags": [
+                    "Device Management"
+                ],
+                "summary": "Update device token for push notifications",
+                "description": "Update the FCM device token for the authenticated user to enable push notifications",
+                "operationId": "4d0a329b36958a3c594b8b676e5b5f69",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "device_token"
+                                ],
+                                "properties": {
+                                    "device_token": {
+                                        "description": "Firebase Cloud Messaging (FCM) token for the device",
+                                        "type": "string",
+                                        "example": "fcm_token_123456789"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Device token updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Device token updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "properties": {
+                                                "device_token": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The device token field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/elderly/register": {
             "post": {
                 "tags": [
@@ -1974,6 +2054,11 @@
                         ],
                         "example": "elderly"
                     },
+                    "device_token": {
+                        "type": "string",
+                        "example": "fcm_token_here",
+                        "nullable": true
+                    },
                     "email_verified_at": {
                         "type": "string",
                         "format": "date-time",
@@ -2023,6 +2108,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "Device Management",
+            "description": "Device Management"
         },
         {
             "name": "Elderly Profiles",

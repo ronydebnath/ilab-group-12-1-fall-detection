@@ -33,5 +33,8 @@ Route::prefix('v1')->group(function () {
         // Fall Events Routes
         Route::apiResource('fall-events', FallEventController::class);
         Route::patch('fall-events/{fallEvent}/false-alarm', [FallEventController::class, 'markFalseAlarm']);
+
+        // Device Token Routes
+        Route::post('/device-token', [App\Http\Controllers\Api\DeviceTokenController::class, 'update']);
     });
 }); 
