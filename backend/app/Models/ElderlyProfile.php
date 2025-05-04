@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *   schema="ElderlyProfile",
  *   required={"first_name", "last_name", "date_of_birth", "gender", "primary_phone", "current_address", "emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship", "mobility_status", "vision_status", "hearing_status", "primary_carer_id", "care_level", "preferred_language", "device_status", "living_situation", "activity_level"},
  *   @OA\Property(property="id", type="integer", example=1),
+ *   @OA\Property(property="user_id", type="integer", nullable=true, example=1),
  *   @OA\Property(property="first_name", type="string", example="John"),
  *   @OA\Property(property="last_name", type="string", example="Doe"),
  *   @OA\Property(property="date_of_birth", type="string", format="date", example="1940-01-01"),
@@ -54,7 +55,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *   @OA\Property(property="notes", type="string", nullable=true, example="Prefers vegetarian meals"),
  *   @OA\Property(property="created_at", type="string", format="date-time"),
  *   @OA\Property(property="updated_at", type="string", format="date-time"),
- *   @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true)
+ *   @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true),
+ *   @OA\Property(
+ *       property="user",
+ *       ref="#/components/schemas/User",
+ *       nullable=true
+ *   )
  * )
  */
 class ElderlyProfile extends Model
@@ -62,6 +68,7 @@ class ElderlyProfile extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'user_id',
         'first_name',
         'last_name',
         'date_of_birth',
@@ -113,6 +120,14 @@ class ElderlyProfile extends Model
         'weight' => 'decimal:2',
         'device_battery_level' => 'integer',
     ];
+
+    /**
+     * Get the user associated with the elderly profile.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Get the primary carer for the elderly profile.

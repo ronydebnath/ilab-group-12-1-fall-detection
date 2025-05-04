@@ -43,6 +43,7 @@ class UserResource extends Resource
                     ->options([
                         'admin' => 'Admin',
                         'carer' => 'Carer',
+                        'elderly' => 'Elderly',
                     ])
                     ->required(),
             ]);
@@ -61,6 +62,7 @@ class UserResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'admin' => 'danger',
                         'carer' => 'success',
+                        'elderly' => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -76,6 +78,7 @@ class UserResource extends Resource
                     ->options([
                         'admin' => 'Admin',
                         'carer' => 'Carer',
+                        'elderly' => 'Elderly',
                     ]),
             ])
             ->actions([

@@ -12,6 +12,29 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 
+/**
+ * @OA\Schema(
+ *     schema="User",
+ *     required={"name", "email", "role"},
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="John Doe"),
+ *     @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+ *     @OA\Property(property="role", type="string", enum={"admin", "carer", "elderly"}, example="elderly"),
+ *     @OA\Property(property="email_verified_at", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time"),
+ *     @OA\Property(
+ *         property="elderly_profile",
+ *         ref="#/components/schemas/ElderlyProfile",
+ *         nullable=true
+ *     ),
+ *     @OA\Property(
+ *         property="carer_profile",
+ *         ref="#/components/schemas/CarerProfile",
+ *         nullable=true
+ *     )
+ * )
+ */
 class User extends Authenticatable implements FilamentUser, CanResetPasswordContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -98,6 +121,14 @@ class User extends Authenticatable implements FilamentUser, CanResetPasswordCont
     }
 
     /**
+     * Check if the user is an elderly user.
+     */
+    public function isElderly(): bool
+    {
+        return $this->role === 'elderly';
+    }
+
+    /**
      * Get all permissions for the user based on their role.
      */
     public function getPermissions(): array
@@ -118,6 +149,13 @@ class User extends Authenticatable implements FilamentUser, CanResetPasswordCont
                 'view_own_profile',
                 'update_own_profile',
             ],
+            'elderly' => [
+                'view_own_profile',
+                'update_own_profile',
+                'view_own_fall_events',
+                'manage_own_device',
+                'manage_own_alerts',
+            ],
             default => [],
         };
     }
@@ -128,5 +166,13 @@ class User extends Authenticatable implements FilamentUser, CanResetPasswordCont
     public function hasPermission(string $permission): bool
     {
         return in_array($permission, $this->getPermissions());
+    }
+
+    /**
+     * Get the elderly profile associated with the user.
+     */
+    public function elderlyProfile()
+    {
+        return $this->hasOne(ElderlyProfile::class);
     }
 }
