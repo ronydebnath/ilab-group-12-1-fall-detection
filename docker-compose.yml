@@ -11,6 +11,14 @@ services:
       - ./backend:/var/www
     networks:
       - fall-detection-network
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    # ports:
+    #   - "8000:8000"
+    # command: php artisan serve --host=0.0.0.0 --port=8000
+    depends_on:
+      - redis
 
   backend-nginx:
     image: nginx:alpine
@@ -48,6 +56,26 @@ services:
       ADMINER_DESIGN: nette
     depends_on:
       - backend-db
+    networks:
+      - fall-detection-network
+
+  php-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - backend-app
+      - redis
+    networks:
+      - fall-detection-network
+    command: sh -c "php artisan queue:work & php artisan schedule:work"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - fall-detection-network
 
