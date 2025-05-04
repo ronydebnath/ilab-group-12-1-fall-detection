@@ -4,7 +4,7 @@
         "title": "Fall Detection API",
         "description": "API documentation for the Fall Detection System",
         "contact": {
-            "email": "rony.debnath@student.uts.edu.au"
+            "email": "admin@fall-detection.com"
         },
         "version": "1.0.0"
     },
@@ -1863,39 +1863,71 @@
                         "format": "date-time",
                         "example": "2024-05-03T12:00:00Z"
                     },
-                    "resolved_at": {
+                    "confidence_score": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 85.5
+                    },
+                    "detection_method": {
                         "type": "string",
-                        "format": "date-time",
-                        "example": "2024-05-03T13:00:00Z",
+                        "example": "sensor"
+                    },
+                    "location": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "location_description": {
+                        "type": "string",
+                        "example": "Living Room"
+                    },
+                    "sensor_data": {
+                        "type": "object",
                         "nullable": true
                     },
                     "status": {
                         "type": "string",
                         "enum": [
                             "detected",
-                            "safe",
-                            "alerted",
-                            "resolved",
-                            "false_alarm"
-                        ],
-                        "example": "detected"
+                            "confirmed",
+                            "false_alarm",
+                            "resolved"
+                        ]
                     },
-                    "sensor_data": {
-                        "type": "object",
-                        "example": {
-                            "acc_x": 0.1,
-                            "acc_y": 0.2
-                        },
-                        "nullable": true
+                    "severity_level": {
+                        "type": "string",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                        ]
                     },
                     "notes": {
                         "type": "string",
-                        "example": "Fall detected in the living room.",
                         "nullable": true
                     },
-                    "false_alarm": {
-                        "type": "boolean",
-                        "example": false
+                    "medical_notes": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "required_medical_attention": {
+                        "type": "boolean"
+                    },
+                    "resolved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "resolved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "response_time_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "response_actions": {
+                        "type": "object",
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
