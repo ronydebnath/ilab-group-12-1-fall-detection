@@ -1,29 +1,32 @@
 # Changelog
 
-## [Unreleased] - 2025-04-23
+## [Unreleased] - 2025-05-03
 
-### 🔧 Modified
+### Added
+- Comprehensive test suite for Swarm Learning system
+  - Model architecture consistency tests
+  - Weight sharing and serialization tests
+  - Peer communication tests
+  - Common test fixtures and configuration
+- New testing documentation in `docs/testing.md`
+- Test coverage reporting support
 
-- **Model Architecture Alignment**
-  - Synchronized model architectures between `node.py` and `node_server.py`
-  - Updated `node_server.py` to use binary classification model
-  - Fixed weight count mismatch (12 vs 13 layers)
-  - Standardized input shape to (500, 9) across all nodes
-  - Aligned optimizer and loss function configurations
+### Changed
+- Updated model architecture in `node_server.py` to match `node.py`
+  - Aligned layer configurations
+  - Ensured consistent binary classification setup
+  - Fixed weight array mismatch issues
+- Improved peer communication tracking
+  - Enhanced unique peer counting logic
+  - Fixed peer reception tracking
+  - Optimized weight sharing process
 
-- **Peer Communication**
-  - Implemented unique peer tracking using sets
-  - Fixed peer counting logic to prevent duplicate counting
-  - Added peer set clearing after successful aggregation
-  - Improved peer status reporting accuracy
+### Fixed
+- Resolved model weight array mismatch between nodes
+- Fixed peer counting logic to accurately track unique peers
+- Corrected weight sharing serialization issues
 
-### 📁 Affected Files
-
-- `node_server.py`
-  - Updated model architecture to match `node.py`
-  - Added unique peer tracking mechanism
-  - Fixed weight aggregation logic
-  - Standardized model compilation parameters
+---
 
 ## [Unreleased] - 2025-04-22
 
@@ -130,3 +133,4 @@
   - Local training logic, model weight noise injection, and peer-to-peer communication via ZeroMQ.
 
 ---
+

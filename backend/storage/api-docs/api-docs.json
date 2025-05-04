@@ -1,0 +1,2125 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Fall Detection API",
+        "description": "API documentation for the Fall Detection System",
+        "contact": {
+            "email": "admin@fall-detection.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://fall-detection-backend.test/api/v1",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "operationId": "5d4fa5d5607ed675ba93907e1fc94534",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "carer"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcdef123456..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login user and create token",
+                "operationId": "67d6d0fdd54fba132e1b6f55ca254183",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "carer"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "2|ghijkl789012..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout user (Revoke the token)",
+                "operationId": "28d48c13fca984400ac8de99f54ee13a",
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get authenticated user details",
+                "operationId": "2baab1eeb5fd49516237a38da22e7a07",
+                "responses": {
+                    "200": {
+                        "description": "User details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "John Doe"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "john@example.com"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "example": "carer"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/device-token": {
+            "post": {
+                "tags": [
+                    "Device Management"
+                ],
+                "summary": "Update device token for push notifications",
+                "description": "Update the FCM device token for the authenticated user to enable push notifications",
+                "operationId": "4d0a329b36958a3c594b8b676e5b5f69",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "device_token"
+                                ],
+                                "properties": {
+                                    "device_token": {
+                                        "description": "Firebase Cloud Messaging (FCM) token for the device",
+                                        "type": "string",
+                                        "example": "fcm_token_123456789"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Device token updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Device token updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "properties": {
+                                                "device_token": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The device token field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/elderly/register": {
+            "post": {
+                "tags": [
+                    "Elderly Authentication"
+                ],
+                "summary": "Register a new elderly user",
+                "description": "Create a new elderly user account with profile information",
+                "operationId": "elderlyRegister",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "device_name",
+                                    "first_name",
+                                    "last_name",
+                                    "date_of_birth",
+                                    "gender",
+                                    "primary_phone",
+                                    "current_address",
+                                    "emergency_contact_name",
+                                    "emergency_contact_phone",
+                                    "emergency_contact_relationship",
+                                    "mobility_status",
+                                    "vision_status",
+                                    "hearing_status",
+                                    "care_level",
+                                    "preferred_language",
+                                    "device_status",
+                                    "living_situation",
+                                    "activity_level"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "example": "John's iPhone"
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "date_of_birth": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1940-01-01"
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "enum": [
+                                            "male",
+                                            "female",
+                                            "other"
+                                        ],
+                                        "example": "male"
+                                    },
+                                    "primary_phone": {
+                                        "type": "string",
+                                        "example": "+1234567890"
+                                    },
+                                    "current_address": {
+                                        "type": "string",
+                                        "example": "123 Main St"
+                                    },
+                                    "emergency_contact_name": {
+                                        "type": "string",
+                                        "example": "Jane Doe"
+                                    },
+                                    "emergency_contact_phone": {
+                                        "type": "string",
+                                        "example": "+1987654321"
+                                    },
+                                    "emergency_contact_relationship": {
+                                        "type": "string",
+                                        "example": "Daughter"
+                                    },
+                                    "mobility_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "independent",
+                                            "needs_assistance",
+                                            "wheelchair_bound"
+                                        ],
+                                        "example": "independent"
+                                    },
+                                    "vision_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "normal",
+                                            "glasses",
+                                            "impaired"
+                                        ],
+                                        "example": "normal"
+                                    },
+                                    "hearing_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "normal",
+                                            "hearing_aid",
+                                            "impaired"
+                                        ],
+                                        "example": "normal"
+                                    },
+                                    "care_level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "basic",
+                                            "moderate",
+                                            "intensive"
+                                        ],
+                                        "example": "basic"
+                                    },
+                                    "preferred_language": {
+                                        "type": "string",
+                                        "example": "English"
+                                    },
+                                    "device_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "living_situation": {
+                                        "type": "string",
+                                        "enum": [
+                                            "lives_alone",
+                                            "with_family",
+                                            "assisted_living"
+                                        ],
+                                        "example": "with_family"
+                                    },
+                                    "activity_level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "moderate",
+                                            "sedentary"
+                                        ],
+                                        "example": "active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcdefghijklmnopqrstuvwxyz"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The email has already been taken."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/elderly/login": {
+            "post": {
+                "tags": [
+                    "Elderly Authentication"
+                ],
+                "summary": "Login an elderly user",
+                "description": "Authenticate an elderly user and return an access token",
+                "operationId": "elderlyLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "device_name"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "example": "John's iPhone"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcdefghijklmnopqrstuvwxyz"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The provided credentials are incorrect."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The provided credentials are incorrect."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/elderly/logout": {
+            "post": {
+                "tags": [
+                    "Elderly Authentication"
+                ],
+                "summary": "Logout an elderly user",
+                "description": "Invalidate the current access token",
+                "operationId": "elderlyLogout",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/elderly/user": {
+            "get": {
+                "tags": [
+                    "Elderly Authentication"
+                ],
+                "summary": "Get authenticated elderly user",
+                "description": "Get the currently authenticated elderly user's information",
+                "operationId": "elderlyUser",
+                "responses": {
+                    "200": {
+                        "description": "User information retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/elderly-profiles": {
+            "get": {
+                "tags": [
+                    "Elderly Profiles"
+                ],
+                "summary": "Get all elderly profiles",
+                "operationId": "f3f69917639ea6115d34bbdca639bb2a",
+                "responses": {
+                    "200": {
+                        "description": "List of elderly profiles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ElderlyProfile"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Elderly Profiles"
+                ],
+                "summary": "Create a new elderly profile",
+                "operationId": "63890e5ca4a84159fdc70d8bcdf9ea52",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ElderlyProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Profile created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ElderlyProfile"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/elderly-profiles/{id}": {
+            "get": {
+                "tags": [
+                    "Elderly Profiles"
+                ],
+                "summary": "Get elderly profile by ID",
+                "operationId": "06d2c8246d545561d94c0949869795d5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ElderlyProfile"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Profile not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Elderly Profiles"
+                ],
+                "summary": "Update elderly profile",
+                "operationId": "6e36631d94441da580edd29d4ef2b034",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ElderlyProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ElderlyProfile"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Profile not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Elderly Profiles"
+                ],
+                "summary": "Delete elderly profile",
+                "operationId": "f034885456dfc49619c17683dc9bc164",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile deleted successfully"
+                    },
+                    "404": {
+                        "description": "Profile not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/fall-events": {
+            "get": {
+                "tags": [
+                    "Fall Events"
+                ],
+                "summary": "Get a list of fall events",
+                "operationId": "f1584aaa4ae3cd689a9f8faa730a57f2",
+                "parameters": [
+                    {
+                        "name": "elderly_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of fall events",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Fall Events"
+                ],
+                "summary": "Log a new fall event",
+                "operationId": "28a7d25cf6505104579b032e4886cf8d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "elderly_id",
+                                    "detected_at"
+                                ],
+                                "properties": {
+                                    "elderly_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "detected_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-05-03T12:00:00Z"
+                                    },
+                                    "sensor_data": {
+                                        "type": "object",
+                                        "example": {
+                                            "acc_x": 0.1,
+                                            "acc_y": 0.2
+                                        }
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Fall detected in the living room."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Fall event created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FallEvent"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/fall-events/{id}": {
+            "get": {
+                "tags": [
+                    "Fall Events"
+                ],
+                "summary": "Get a specific fall event",
+                "operationId": "4a3afe295bdfc4a2cad7fbbda2659372",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fall event details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FallEvent"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Fall event not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Fall Events"
+                ],
+                "summary": "Update a fall event",
+                "operationId": "c31dcffd837c4af06ab2f26285100450",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "resolved"
+                                    },
+                                    "resolved_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "sensor_data": {
+                                        "type": "object"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "false_alarm": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Fall event updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FallEvent"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Fall Events"
+                ],
+                "summary": "Delete a fall event",
+                "operationId": "acc13b1bf54b73f3002d8817ed78d3b6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/fall-events/{id}/false-alarm": {
+            "patch": {
+                "tags": [
+                    "Fall Events"
+                ],
+                "summary": "Mark a fall event as a false alarm",
+                "operationId": "14243d767e55b2ad8cce4a1350022ed9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "No fall occurred, device dropped."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Fall event marked as false alarm",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FallEvent"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ElderlyProfileRequest": {
+                "required": [
+                    "first_name",
+                    "last_name",
+                    "date_of_birth",
+                    "gender",
+                    "primary_phone",
+                    "current_address",
+                    "emergency_contact_name",
+                    "emergency_contact_phone",
+                    "emergency_contact_relationship",
+                    "mobility_status",
+                    "vision_status",
+                    "hearing_status",
+                    "primary_carer_id",
+                    "care_level",
+                    "preferred_language",
+                    "device_status",
+                    "living_situation",
+                    "activity_level"
+                ],
+                "properties": {
+                    "first_name": {
+                        "type": "string",
+                        "example": "John"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "Doe"
+                    },
+                    "date_of_birth": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1940-01-01"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "enum": [
+                            "male",
+                            "female",
+                            "other"
+                        ],
+                        "example": "male"
+                    },
+                    "profile_photo": {
+                        "type": "string",
+                        "example": "profile-photos/john.jpg",
+                        "nullable": true
+                    },
+                    "height": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 170.5,
+                        "nullable": true
+                    },
+                    "weight": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 65.2,
+                        "nullable": true
+                    },
+                    "blood_type": {
+                        "type": "string",
+                        "example": "O+",
+                        "nullable": true
+                    },
+                    "national_id": {
+                        "type": "string",
+                        "example": "A123456789",
+                        "nullable": true
+                    },
+                    "primary_phone": {
+                        "type": "string",
+                        "example": "+1234567890"
+                    },
+                    "secondary_phone": {
+                        "type": "string",
+                        "example": "+0987654321",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "john.doe@example.com",
+                        "nullable": true
+                    },
+                    "current_address": {
+                        "type": "string",
+                        "example": "123 Main St, City, Country"
+                    },
+                    "emergency_contact_name": {
+                        "type": "string",
+                        "example": "Jane Doe"
+                    },
+                    "emergency_contact_phone": {
+                        "type": "string",
+                        "example": "+1122334455"
+                    },
+                    "emergency_contact_relationship": {
+                        "type": "string",
+                        "example": "Daughter"
+                    },
+                    "medical_conditions": {
+                        "type": "string",
+                        "example": "Diabetes",
+                        "nullable": true
+                    },
+                    "allergies": {
+                        "type": "string",
+                        "example": "Peanuts",
+                        "nullable": true
+                    },
+                    "current_medications": {
+                        "type": "string",
+                        "example": "Metformin",
+                        "nullable": true
+                    },
+                    "disabilities": {
+                        "type": "string",
+                        "example": "Hearing loss",
+                        "nullable": true
+                    },
+                    "mobility_status": {
+                        "type": "string",
+                        "enum": [
+                            "independent",
+                            "needs_assistance",
+                            "wheelchair_bound"
+                        ],
+                        "example": "independent"
+                    },
+                    "vision_status": {
+                        "type": "string",
+                        "enum": [
+                            "normal",
+                            "glasses",
+                            "impaired"
+                        ],
+                        "example": "normal"
+                    },
+                    "hearing_status": {
+                        "type": "string",
+                        "enum": [
+                            "normal",
+                            "hearing_aid",
+                            "impaired"
+                        ],
+                        "example": "normal"
+                    },
+                    "last_medical_checkup": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-12-01",
+                        "nullable": true
+                    },
+                    "primary_carer_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "secondary_carer_id": {
+                        "type": "integer",
+                        "example": 3,
+                        "nullable": true
+                    },
+                    "care_level": {
+                        "type": "string",
+                        "enum": [
+                            "basic",
+                            "moderate",
+                            "intensive"
+                        ],
+                        "example": "basic"
+                    },
+                    "special_care_instructions": {
+                        "type": "string",
+                        "example": "Needs help with medication",
+                        "nullable": true
+                    },
+                    "daily_routine_notes": {
+                        "type": "string",
+                        "example": "Walks every morning",
+                        "nullable": true
+                    },
+                    "dietary_restrictions": {
+                        "type": "string",
+                        "example": "No sugar",
+                        "nullable": true
+                    },
+                    "preferred_language": {
+                        "type": "string",
+                        "example": "English"
+                    },
+                    "device_id": {
+                        "type": "string",
+                        "example": "DEV123456",
+                        "nullable": true
+                    },
+                    "device_status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ],
+                        "example": "active"
+                    },
+                    "last_device_check": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-05-01",
+                        "nullable": true
+                    },
+                    "device_battery_level": {
+                        "type": "integer",
+                        "example": 85,
+                        "nullable": true
+                    },
+                    "device_location": {
+                        "type": "string",
+                        "example": "Home",
+                        "nullable": true
+                    },
+                    "preferred_hospital": {
+                        "type": "string",
+                        "example": "City Hospital",
+                        "nullable": true
+                    },
+                    "insurance_information": {
+                        "type": "string",
+                        "example": "Provider: ABC Insurance, Policy: 12345",
+                        "nullable": true
+                    },
+                    "living_situation": {
+                        "type": "string",
+                        "enum": [
+                            "lives_alone",
+                            "with_family",
+                            "assisted_living"
+                        ],
+                        "example": "with_family"
+                    },
+                    "activity_level": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "moderate",
+                            "sedentary"
+                        ],
+                        "example": "active"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Prefers vegetarian meals",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "CarerProfile": {
+                "required": [
+                    "user_id",
+                    "phone_number",
+                    "emergency_contact_name",
+                    "emergency_contact_phone",
+                    "address",
+                    "qualification",
+                    "specialization",
+                    "years_of_experience",
+                    "availability_schedule",
+                    "max_elderly_capacity",
+                    "current_elderly_count",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "phone_number": {
+                        "type": "string",
+                        "example": "+1234567890"
+                    },
+                    "emergency_contact_name": {
+                        "type": "string",
+                        "example": "Jane Smith"
+                    },
+                    "emergency_contact_phone": {
+                        "type": "string",
+                        "example": "+0987654321"
+                    },
+                    "address": {
+                        "type": "string",
+                        "example": "456 Care Street, City"
+                    },
+                    "qualification": {
+                        "type": "string",
+                        "example": "Registered Nurse"
+                    },
+                    "specialization": {
+                        "type": "string",
+                        "example": "Geriatric Care"
+                    },
+                    "years_of_experience": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "availability_schedule": {
+                        "type": "object",
+                        "example": {
+                            "monday": "09:00-17:00",
+                            "tuesday": "09:00-17:00"
+                        }
+                    },
+                    "max_elderly_capacity": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "current_elderly_count": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "on_leave"
+                        ],
+                        "example": "active"
+                    },
+                    "last_active_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Prefers morning shifts",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "user": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ElderlyProfile": {
+                "required": [
+                    "first_name",
+                    "last_name",
+                    "date_of_birth",
+                    "gender",
+                    "primary_phone",
+                    "current_address",
+                    "emergency_contact_name",
+                    "emergency_contact_phone",
+                    "emergency_contact_relationship",
+                    "mobility_status",
+                    "vision_status",
+                    "hearing_status",
+                    "primary_carer_id",
+                    "care_level",
+                    "preferred_language",
+                    "device_status",
+                    "living_situation",
+                    "activity_level"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "example": "John"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "Doe"
+                    },
+                    "date_of_birth": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1940-01-01"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "enum": [
+                            "male",
+                            "female",
+                            "other"
+                        ],
+                        "example": "male"
+                    },
+                    "profile_photo": {
+                        "type": "string",
+                        "example": "profile-photos/john.jpg",
+                        "nullable": true
+                    },
+                    "height": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 170.5,
+                        "nullable": true
+                    },
+                    "weight": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 65.2,
+                        "nullable": true
+                    },
+                    "blood_type": {
+                        "type": "string",
+                        "example": "O+",
+                        "nullable": true
+                    },
+                    "national_id": {
+                        "type": "string",
+                        "example": "A123456789",
+                        "nullable": true
+                    },
+                    "primary_phone": {
+                        "type": "string",
+                        "example": "+1234567890"
+                    },
+                    "secondary_phone": {
+                        "type": "string",
+                        "example": "+0987654321",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "john.doe@example.com",
+                        "nullable": true
+                    },
+                    "current_address": {
+                        "type": "string",
+                        "example": "123 Main St, City, Country"
+                    },
+                    "emergency_contact_name": {
+                        "type": "string",
+                        "example": "Jane Doe"
+                    },
+                    "emergency_contact_phone": {
+                        "type": "string",
+                        "example": "+1122334455"
+                    },
+                    "emergency_contact_relationship": {
+                        "type": "string",
+                        "example": "Daughter"
+                    },
+                    "medical_conditions": {
+                        "type": "string",
+                        "example": "Diabetes",
+                        "nullable": true
+                    },
+                    "allergies": {
+                        "type": "string",
+                        "example": "Peanuts",
+                        "nullable": true
+                    },
+                    "current_medications": {
+                        "type": "string",
+                        "example": "Metformin",
+                        "nullable": true
+                    },
+                    "disabilities": {
+                        "type": "string",
+                        "example": "Hearing loss",
+                        "nullable": true
+                    },
+                    "mobility_status": {
+                        "type": "string",
+                        "enum": [
+                            "independent",
+                            "needs_assistance",
+                            "wheelchair_bound"
+                        ],
+                        "example": "independent"
+                    },
+                    "vision_status": {
+                        "type": "string",
+                        "enum": [
+                            "normal",
+                            "glasses",
+                            "impaired"
+                        ],
+                        "example": "normal"
+                    },
+                    "hearing_status": {
+                        "type": "string",
+                        "enum": [
+                            "normal",
+                            "hearing_aid",
+                            "impaired"
+                        ],
+                        "example": "normal"
+                    },
+                    "last_medical_checkup": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-12-01",
+                        "nullable": true
+                    },
+                    "primary_carer_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "secondary_carer_id": {
+                        "type": "integer",
+                        "example": 3,
+                        "nullable": true
+                    },
+                    "care_level": {
+                        "type": "string",
+                        "enum": [
+                            "basic",
+                            "moderate",
+                            "intensive"
+                        ],
+                        "example": "basic"
+                    },
+                    "special_care_instructions": {
+                        "type": "string",
+                        "example": "Needs help with medication",
+                        "nullable": true
+                    },
+                    "daily_routine_notes": {
+                        "type": "string",
+                        "example": "Walks every morning",
+                        "nullable": true
+                    },
+                    "dietary_restrictions": {
+                        "type": "string",
+                        "example": "No sugar",
+                        "nullable": true
+                    },
+                    "preferred_language": {
+                        "type": "string",
+                        "example": "English"
+                    },
+                    "device_id": {
+                        "type": "string",
+                        "example": "DEV123456",
+                        "nullable": true
+                    },
+                    "device_status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive"
+                        ],
+                        "example": "active"
+                    },
+                    "last_device_check": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-05-01",
+                        "nullable": true
+                    },
+                    "device_battery_level": {
+                        "type": "integer",
+                        "example": 85,
+                        "nullable": true
+                    },
+                    "device_location": {
+                        "type": "string",
+                        "example": "Home",
+                        "nullable": true
+                    },
+                    "preferred_hospital": {
+                        "type": "string",
+                        "example": "City Hospital",
+                        "nullable": true
+                    },
+                    "insurance_information": {
+                        "type": "string",
+                        "example": "Provider: ABC Insurance, Policy: 12345",
+                        "nullable": true
+                    },
+                    "living_situation": {
+                        "type": "string",
+                        "enum": [
+                            "lives_alone",
+                            "with_family",
+                            "assisted_living"
+                        ],
+                        "example": "with_family"
+                    },
+                    "activity_level": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "moderate",
+                            "sedentary"
+                        ],
+                        "example": "active"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Prefers vegetarian meals",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "user": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "FallEvent": {
+                "required": [
+                    "elderly_id",
+                    "detected_at",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "elderly_id": {
+                        "description": "ID of the elderly profile",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "detected_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-05-03T12:00:00Z"
+                    },
+                    "confidence_score": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 85.5
+                    },
+                    "detection_method": {
+                        "type": "string",
+                        "example": "sensor"
+                    },
+                    "location": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "location_description": {
+                        "type": "string",
+                        "example": "Living Room"
+                    },
+                    "sensor_data": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "detected",
+                            "confirmed",
+                            "false_alarm",
+                            "resolved"
+                        ]
+                    },
+                    "severity_level": {
+                        "type": "string",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "medical_notes": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "required_medical_attention": {
+                        "type": "boolean"
+                    },
+                    "resolved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "resolved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "response_time_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "response_actions": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "required": [
+                    "name",
+                    "email",
+                    "role"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "carer",
+                            "elderly"
+                        ],
+                        "example": "elderly"
+                    },
+                    "device_token": {
+                        "type": "string",
+                        "example": "fcm_token_here",
+                        "nullable": true
+                    },
+                    "email_verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "elderly_profile": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ElderlyProfile"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "carer_profile": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CarerProfile"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Elderly Authentication",
+            "description": "API Endpoints for elderly user authentication"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Device Management",
+            "description": "Device Management"
+        },
+        {
+            "name": "Elderly Profiles",
+            "description": "Elderly Profiles"
+        },
+        {
+            "name": "Fall Events",
+            "description": "Fall Events"
+        }
+    ]
+}
