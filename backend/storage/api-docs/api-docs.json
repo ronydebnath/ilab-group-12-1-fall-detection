@@ -1266,6 +1266,336 @@
                     }
                 ]
             }
+        },
+        "/model-weights": {
+            "post": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Store new model weights",
+                "operationId": "d333d9ad525da54835f2debd404d886a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "weights"
+                                ],
+                                "properties": {
+                                    "weights": {
+                                        "description": "Model weights data",
+                                        "type": "object"
+                                    },
+                                    "metrics": {
+                                        "properties": {
+                                            "accuracy": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "precision": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "recall": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "f1_score": {
+                                                "type": "number",
+                                                "format": "float"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "metadata": {
+                                        "description": "Additional model metadata",
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Model weights stored successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "version": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/model-weights/active": {
+            "get": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Get currently active model weights",
+                "operationId": "2d0dccef3c44efb3fdc588469b627e47",
+                "responses": {
+                    "200": {
+                        "description": "Active model weights retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "version": {
+                                            "type": "string"
+                                        },
+                                        "weights": {
+                                            "type": "object"
+                                        },
+                                        "metrics": {
+                                            "properties": {
+                                                "accuracy": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "precision": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "recall": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "f1_score": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No active model found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/model-weights/{version}/activate": {
+            "post": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Activate a specific model version",
+                "operationId": "b4017241438c7f0c2c0e251a9128e06a",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "Model version to activate",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Model activated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "version": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/model-weights/history": {
+            "get": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Get model version history",
+                "operationId": "801b62578ffddbccf525091eaa1cfdb4",
+                "responses": {
+                    "200": {
+                        "description": "Model history retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "version": {
+                                                "type": "string"
+                                            },
+                                            "model_type": {
+                                                "type": "string"
+                                            },
+                                            "accuracy": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "precision": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "recall": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "f1_score": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "is_active": {
+                                                "type": "boolean"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/model-weights/{version}": {
+            "delete": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Delete a specific model version",
+                "operationId": "42b437979ac155e9210a5f52987f92a1",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "Model version to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Model deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2095,8 +2425,8 @@
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
         }
     },
@@ -2104,6 +2434,10 @@
         {
             "name": "Elderly Authentication",
             "description": "API Endpoints for elderly user authentication"
+        },
+        {
+            "name": "Model Weights",
+            "description": "API Endpoints for managing model weights"
         },
         {
             "name": "Authentication",
@@ -2120,6 +2454,11 @@
         {
             "name": "Fall Events",
             "description": "Fall Events"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
         }
     ]
 }
