@@ -37,12 +37,29 @@ def create_model(input_shape):
     Builds a CNN model for binary fall detection.
     """
     model = tf.keras.Sequential([
-        tf.keras.layers.Conv1D(64, 3, activation='relu', input_shape=input_shape),
+        # First Conv1D block
+        tf.keras.layers.Conv1D(32, 3, activation='relu', input_shape=input_shape),
+        tf.keras.layers.BatchNormalization(),
         tf.keras.layers.MaxPooling1D(2),
+        
+        # Second Conv1D block
         tf.keras.layers.Conv1D(64, 3, activation='relu'),
+        tf.keras.layers.BatchNormalization(),
         tf.keras.layers.MaxPooling1D(2),
-        tf.keras.layers.Conv1D(64, 3),
+        
+        # Third Conv1D block
+        tf.keras.layers.Conv1D(128, 3, activation='relu'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling1D(2),
+        
+        # Fourth Conv1D block
+        tf.keras.layers.Conv1D(256, 3, activation='relu'),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.MaxPooling1D(2),
+        
+        # Global pooling and dense layers
         tf.keras.layers.GlobalAveragePooling1D(),
+        tf.keras.layers.Dense(128, activation='relu'),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.Dropout(0.5),
         tf.keras.layers.Dense(1, activation='sigmoid')

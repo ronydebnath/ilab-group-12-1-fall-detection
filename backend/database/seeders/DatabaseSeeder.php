@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\CarerProfile;
+use App\Models\ElderlyProfile;
+use App\Models\FallEvent;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,9 +18,19 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Create admins
+        User::factory()->state(['role' => 'admin'])->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
         ]);
+
+        // Create some carer profiles
+        CarerProfile::factory(5)->create();
+
+        // Create some elderly profiles
+        ElderlyProfile::factory(20)->create();
+
+        // Create fall events over last week
+        FallEvent::factory(100)->create();
     }
 }
