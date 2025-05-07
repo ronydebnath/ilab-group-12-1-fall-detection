@@ -6,13 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::table('model_weights', function (Blueprint $table) {
-            // Security and Encryption
             $table->string('encryption_key_id')->nullable()->after('id');
             $table->string('encryption_algorithm')->default('AES-256-GCM')->after('encryption_key_id');
             $table->string('encryption_iv')->nullable()->after('encryption_algorithm');
@@ -71,10 +67,7 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::table('model_weights', function (Blueprint $table) {
             // Remove indexes
@@ -123,4 +116,4 @@ return new class extends Migration
             ]);
         });
     }
-}; 
+};
