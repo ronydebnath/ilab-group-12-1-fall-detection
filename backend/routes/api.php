@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ElderlyProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FallEventController;
 use App\Http\Controllers\ModelWeightController;
+use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\AlertController;
 
 
 // Public routes
@@ -46,5 +48,18 @@ Route::prefix('v1')->group(function () {
         Route::post('/{version}/activate', [ModelWeightController::class, 'activate']);
         Route::get('/history', [ModelWeightController::class, 'history']);
         Route::delete('/{version}', [ModelWeightController::class, 'delete']);
+    });
+
+    // Monitoring Routes
+    Route::prefix('monitoring')->group(function () {
+        Route::get('/health', [MonitoringController::class, 'healthCheck']);
+        Route::get('/metrics', [MonitoringController::class, 'metrics']);
+    });
+
+    // Alert Routes
+    Route::prefix('alerts')->group(function () {
+        Route::get('/', [AlertController::class, 'index']);
+        Route::post('/', [AlertController::class, 'triggerAlert']);
+        Route::post('/{alert}/resolve', [AlertController::class, 'resolve']);
     });
 }); 

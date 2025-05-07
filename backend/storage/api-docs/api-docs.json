@@ -15,6 +15,252 @@
         }
     ],
     "paths": {
+        "/alerts": {
+            "get": {
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Get all alerts",
+                "operationId": "517a7a87a883a188ffc66d194eb4b83a",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by alert status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "resolved"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "severity",
+                        "in": "query",
+                        "description": "Filter by alert severity",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "low",
+                                "medium",
+                                "high",
+                                "critical"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of alerts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "severity": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "message": {
+                                                        "type": "string"
+                                                    },
+                                                    "triggered_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "resolved_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Trigger a new alert",
+                "operationId": "19254ce8b3533a49a663f6e3cf7f4bbc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "severity",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "fall_detected"
+                                    },
+                                    "severity": {
+                                        "type": "string",
+                                        "example": "high"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Fall detected for user ID 123"
+                                    },
+                                    "context": {
+                                        "properties": {
+                                            "user_id": {
+                                                "type": "integer",
+                                                "example": 123
+                                            },
+                                            "location": {
+                                                "type": "string",
+                                                "example": "Living Room"
+                                            },
+                                            "confidence": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 0.95
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Alert created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alert created successfully"
+                                        },
+                                        "alert": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "fall_detected"
+                                                },
+                                                "severity": {
+                                                    "type": "string",
+                                                    "example": "high"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Fall detected for user ID 123"
+                                                },
+                                                "triggered_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/alerts/{id}/resolve": {
+            "post": {
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Resolve an alert",
+                "operationId": "eefb742d59e767760aff2666f6bcbaba",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Alert resolved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alert resolved successfully"
+                                        },
+                                        "alert": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "resolved"
+                                                },
+                                                "resolved_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Alert not found"
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "tags": [
@@ -1814,6 +2060,123 @@
                     }
                 }
             }
+        },
+        "/monitoring/health": {
+            "get": {
+                "tags": [
+                    "Monitoring"
+                ],
+                "summary": "Get system health status",
+                "operationId": "e8b90eaf2f0b717806420ce69e099b1e",
+                "responses": {
+                    "200": {
+                        "description": "System health status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "healthy"
+                                        },
+                                        "components": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "database"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "healthy"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "Connection successful"
+                                                    },
+                                                    "metrics": {
+                                                        "properties": {
+                                                            "response_time": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 0.15
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/monitoring/metrics": {
+            "get": {
+                "tags": [
+                    "Monitoring"
+                ],
+                "summary": "Get system performance metrics",
+                "operationId": "d4fd71fc5a1478f46ff3808bc8fc519c",
+                "parameters": [
+                    {
+                        "name": "hours",
+                        "in": "query",
+                        "description": "Time range in hours",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 24
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "System performance metrics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "metrics": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "cpu_usage"
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 45.5
+                                                    },
+                                                    "unit": {
+                                                        "type": "string",
+                                                        "example": "percent"
+                                                    },
+                                                    "timestamp": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2650,12 +3013,20 @@
     },
     "tags": [
         {
+            "name": "Alerts",
+            "description": "API Endpoints for alert management"
+        },
+        {
             "name": "Elderly Authentication",
             "description": "API Endpoints for elderly user authentication"
         },
         {
             "name": "Model Weights",
             "description": "API Endpoints for managing model weights"
+        },
+        {
+            "name": "Monitoring",
+            "description": "API Endpoints for system monitoring and health checks"
         },
         {
             "name": "Authentication",
