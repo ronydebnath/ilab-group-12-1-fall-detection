@@ -18,17 +18,27 @@ class ModelWeight extends Model
         'recall',
         'f1_score',
         'metadata',
-        'is_active'
+        'is_active',
+        'total_layers',
+        'total_parameters',
+        'model_ready',
+        'node_id',
+        'aggregation_status',
+        'peers_connected'
     ];
 
     protected $casts = [
         'weights' => 'array',
         'metadata' => 'array',
+        'is_active' => 'boolean',
+        'model_ready' => 'boolean',
         'accuracy' => 'float',
         'precision' => 'float',
         'recall' => 'float',
         'f1_score' => 'float',
-        'is_active' => 'boolean'
+        'total_layers' => 'integer',
+        'total_parameters' => 'integer',
+        'peers_connected' => 'integer'
     ];
 
     public function activate()
@@ -59,5 +69,28 @@ class ModelWeight extends Model
     public function getModelByVersion($version)
     {
         return self::where('version', $version)->first();
+    }
+
+    public function calculateTotalParameters(): int
+    {
+        $total = 0;
+        foreach ($this->weights['layers'] as $layer) {
+            $shape = $layer['shape'];
+            if (count($shape) === 1) {
+                $total += $shape[0];
+            } else {
+                $product = 1;
+                foreach ($shape as $dim) {
+                    $product *= $dim;
+                }
+                $total += $product;
+            }
+        }
+        return $total;
+    }
+
+    public function isModelReady(): bool
+    {
+        return $this->total_layers === 32 && $this->total_parameters > 0;
     }
 } 
