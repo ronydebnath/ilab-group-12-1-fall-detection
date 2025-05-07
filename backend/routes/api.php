@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ElderlyAuthController;
 use App\Http\Controllers\Api\ElderlyProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FallEventController;
+use App\Http\Controllers\ModelWeightController;
 
 
 // Public routes
@@ -36,5 +37,14 @@ Route::prefix('v1')->group(function () {
 
         // Device Token Routes
         Route::post('/device-token', [App\Http\Controllers\Api\DeviceTokenController::class, 'update']);
+    });
+
+    // Model Weight Routes
+    Route::prefix('model-weights')->group(function () {
+        Route::post('/', [ModelWeightController::class, 'store']);
+        Route::get('/active', [ModelWeightController::class, 'getActive']);
+        Route::post('/{version}/activate', [ModelWeightController::class, 'activate']);
+        Route::get('/history', [ModelWeightController::class, 'history']);
+        Route::delete('/{version}', [ModelWeightController::class, 'delete']);
     });
 }); 
