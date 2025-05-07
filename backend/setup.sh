@@ -1,16 +1,95 @@
 #!/bin/bash
 
-# Add host entry with elevated permissions
-echo "Adding host entry to /etc/hosts..."
-if [ "$(uname)" == "Darwin" ]; then
-    # macOS requires sudo
-    if ! grep -q "fall-detection-backend.test" /etc/hosts; then
-        echo "127.0.0.1 fall-detection-backend.test" | sudo tee -a /etc/hosts > /dev/null
+# Function to validate domain name
+validate_domain() {
+    local domain=$1
+    if [[ ! $domain =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
+        return 1
     fi
-elif [ "$(uname)" == "Linux" ]; then
-    # Linux requires sudo
-    if ! grep -q "fall-detection-backend.test" /etc/hosts; then
-        echo "127.0.0.1 fall-detection-backend.test" | sudo tee -a /etc/hosts > /dev/null
+    return 0
+}
+
+# Function to validate IP address
+validate_ip() {
+    local ip=$1
+    if [[ ! $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        return 1
+    fi
+    return 0
+}
+
+# Ask user about deployment environment
+while true; do
+    read -p "Are you deploying the application in local or production environment? (local/production): " deployment_env
+    deployment_env=$(echo "$deployment_env" | tr '[:upper:]' '[:lower:]')
+    if [ "$deployment_env" = "local" ] || [ "$deployment_env" = "production" ]; then
+        break
+    else
+        echo "Invalid input. Please enter 'local' or 'production'"
+    fi
+done
+
+if [ "$deployment_env" = "production" ]; then
+    # Get domain and IP details for production
+    while true; do
+        read -p "Please enter your domain name (e.g., example.com): " domain_name
+        if validate_domain "$domain_name"; then
+            break
+        else
+            echo "Invalid domain name format. Please enter a valid domain (e.g., example.com)"
+        fi
+    done
+
+    while true; do
+        read -p "Please enter the server IP address: " ip_address
+        if validate_ip "$ip_address"; then
+            break
+        else
+            echo "Invalid IP address format. Please enter a valid IP (e.g., 192.168.1.1)"
+        fi
+    done
+    
+    # Copy and modify nginx config
+    echo "Configuring nginx for production..."
+    if [ -f "backend/docker/nginx/conf.d/app.conf.example" ]; then
+        cp backend/docker/nginx/conf.d/app.conf.example backend/docker/nginx/conf.d/app.conf
+        # Replace server_name in nginx config
+        sed -i.bak "s/server_name .*/server_name $domain_name;/" backend/docker/nginx/conf.d/app.conf
+        rm -f backend/docker/nginx/conf.d/app.conf.bak
+        
+        # Add domain entry to hosts file
+        echo "Adding domain entry to /etc/hosts..."
+        if ! grep -q "$domain_name" /etc/hosts; then
+            echo "$ip_address $domain_name" | sudo tee -a /etc/hosts > /dev/null
+        fi
+        
+        echo "Nginx configuration updated for domain: $domain_name"
+    else
+        echo "Error: nginx example config file not found!"
+        exit 1
+    fi
+
+    # Set production environment variables
+    export APP_ENV=production
+    export APP_DEBUG=false
+else
+    echo "Configuring for local development..."
+    # Set local environment variables
+    export APP_ENV=local
+    export APP_DEBUG=true
+
+    # Add host entry with elevated permissions
+    echo "Adding host entry to /etc/hosts..."
+    if [ "$(uname)" == "Darwin" ]; then
+        # macOS requires sudo
+        if ! grep -q "fall-detection-backend.test" /etc/hosts; then
+            echo "127.0.0.1 fall-detection-backend.test" | sudo tee -a /etc/hosts > /dev/null
+        fi
+    elif [ "$(uname)" == "Linux" ]; then
+        # Linux requires sudo
+        if ! grep -q "fall-detection-backend.test" /etc/hosts; then
+            echo "127.0.0.1 fall-detection-backend.test" | sudo tee -a /etc/hosts > /dev/null
+        fi
     fi
 fi
 
@@ -159,9 +238,6 @@ install_docker_linux() {
     exit 0
 }
 
-# Set proper permissions
-mkdir -p storage bootstrap/cache
-chmod -R 777 storage bootstrap/cache
 
 # Start the containers if not running
 if ! docker-compose ps | grep -q "backend-app.*running"; then
@@ -172,7 +248,7 @@ if ! docker-compose ps | grep -q "backend-app.*running"; then
 fi
 
 # Ensure vendor directory exists and has proper permissions
-docker-compose exec backend-app bash -c "mkdir -p /var/www/vendor && chmod -R 755 /var/www/vendor"
+docker-compose exec backend-app bash -c "mkdir -p /var/www/vendor && chmod -R 755 /var/www/vendor && chmod -R 777 storage bootstrap/cache "
 
 # Run composer install inside container
 docker-compose exec backend-app composer install --no-scripts --no-autoloader --no-interaction --prefer-dist
