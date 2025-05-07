@@ -15,252 +15,6 @@
         }
     ],
     "paths": {
-        "/alerts": {
-            "get": {
-                "tags": [
-                    "Alerts"
-                ],
-                "summary": "Get all alerts",
-                "operationId": "517a7a87a883a188ffc66d194eb4b83a",
-                "parameters": [
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "description": "Filter by alert status",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "pending",
-                                "in_progress",
-                                "resolved"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "severity",
-                        "in": "query",
-                        "description": "Filter by alert severity",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "low",
-                                "medium",
-                                "high",
-                                "critical"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "List of alerts",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "alerts": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "type": {
-                                                        "type": "string"
-                                                    },
-                                                    "severity": {
-                                                        "type": "string"
-                                                    },
-                                                    "status": {
-                                                        "type": "string"
-                                                    },
-                                                    "message": {
-                                                        "type": "string"
-                                                    },
-                                                    "triggered_at": {
-                                                        "type": "string",
-                                                        "format": "date-time"
-                                                    },
-                                                    "resolved_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "nullable": true
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Alerts"
-                ],
-                "summary": "Trigger a new alert",
-                "operationId": "19254ce8b3533a49a663f6e3cf7f4bbc",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "type",
-                                    "severity",
-                                    "message"
-                                ],
-                                "properties": {
-                                    "type": {
-                                        "type": "string",
-                                        "example": "fall_detected"
-                                    },
-                                    "severity": {
-                                        "type": "string",
-                                        "example": "high"
-                                    },
-                                    "message": {
-                                        "type": "string",
-                                        "example": "Fall detected for user ID 123"
-                                    },
-                                    "context": {
-                                        "properties": {
-                                            "user_id": {
-                                                "type": "integer",
-                                                "example": 123
-                                            },
-                                            "location": {
-                                                "type": "string",
-                                                "example": "Living Room"
-                                            },
-                                            "confidence": {
-                                                "type": "number",
-                                                "format": "float",
-                                                "example": 0.95
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Alert created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Alert created successfully"
-                                        },
-                                        "alert": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "type": {
-                                                    "type": "string",
-                                                    "example": "fall_detected"
-                                                },
-                                                "severity": {
-                                                    "type": "string",
-                                                    "example": "high"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "pending"
-                                                },
-                                                "message": {
-                                                    "type": "string",
-                                                    "example": "Fall detected for user ID 123"
-                                                },
-                                                "triggered_at": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                }
-            }
-        },
-        "/alerts/{id}/resolve": {
-            "post": {
-                "tags": [
-                    "Alerts"
-                ],
-                "summary": "Resolve an alert",
-                "operationId": "eefb742d59e767760aff2666f6bcbaba",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Alert resolved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Alert resolved successfully"
-                                        },
-                                        "alert": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "resolved"
-                                                },
-                                                "resolved_at": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Alert not found"
-                    }
-                }
-            }
-        },
         "/register": {
             "post": {
                 "tags": [
@@ -2920,6 +2674,16 @@
                         "type": "object",
                         "nullable": true
                     },
+                    "notification_channels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "context": {
+                        "type": "object",
+                        "nullable": true
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -3012,10 +2776,6 @@
         }
     },
     "tags": [
-        {
-            "name": "Alerts",
-            "description": "API Endpoints for alert management"
-        },
         {
             "name": "Elderly Authentication",
             "description": "API Endpoints for elderly user authentication"
