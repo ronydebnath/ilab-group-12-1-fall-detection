@@ -1,17 +1,107 @@
 #!/bin/bash
 
-# Add host entry with elevated permissions
-echo "Adding host entry to /etc/hosts..."
-if [ "$(uname)" == "Darwin" ]; then
-    # macOS requires sudo
-    if ! grep -q "fall-detection-backend.test" /etc/hosts; then
-        echo "127.0.0.1 fall-detection-backend.test" | sudo tee -a /etc/hosts > /dev/null
+# Function to validate domain name
+validate_domain() {
+    local domain=$1
+    if [[ ! $domain =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
+        return 1
     fi
-elif [ "$(uname)" == "Linux" ]; then
-    # Linux requires sudo
-    if ! grep -q "fall-detection-backend.test" /etc/hosts; then
-        echo "127.0.0.1 fall-detection-backend.test" | sudo tee -a /etc/hosts > /dev/null
+    return 0
+}
+
+# Function to validate IP address
+validate_ip() {
+    local ip=$1
+    if [[ ! $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        return 1
     fi
+    return 0
+}
+
+# Function to update nginx configuration
+update_nginx_config() {
+    local domain=$1
+    local config_file="backend/docker/nginx/conf.d/app.conf"
+    local example_file="backend/docker/nginx/conf.d/app.conf.example"
+
+    if [ -f "$example_file" ]; then
+        cp "$example_file" "$config_file"
+        # Replace server_name in nginx config
+        sed -i.bak "s/server_name .*/server_name $domain;/" "$config_file"
+        rm -f "${config_file}.bak"
+        echo "Nginx configuration updated for domain: $domain"
+    else
+        echo "Error: nginx example config file not found!"
+        exit 1
+    fi
+}
+
+# Function to update hosts file
+update_hosts_file() {
+    local domain=$1
+    local ip=$2
+
+    if ! grep -q "$domain" /etc/hosts; then
+        echo "$ip $domain" | sudo tee -a /etc/hosts > /dev/null
+        echo "Added domain entry to /etc/hosts"
+    else
+        echo "Domain entry already exists in /etc/hosts"
+    fi
+}
+
+# Ask user about deployment environment
+while true; do
+    read -p "Are you deploying the application in local or production environment? (local/production): " deployment_env
+    deployment_env=$(echo "$deployment_env" | tr '[:upper:]' '[:lower:]')
+    if [ "$deployment_env" = "local" ] || [ "$deployment_env" = "production" ]; then
+        break
+    else
+        echo "Invalid input. Please enter 'local' or 'production'"
+    fi
+done
+
+# Set domain and IP based on environment
+if [ "$deployment_env" = "production" ]; then
+    # Get domain and IP details for production
+    while true; do
+        read -p "Please enter your domain name (e.g., example.com): " domain_name
+        if validate_domain "$domain_name"; then
+            break
+        else
+            echo "Invalid domain name format. Please enter a valid domain (e.g., example.com)"
+        fi
+    done
+
+    while true; do
+        read -p "Please enter the server IP address: " ip_address
+        if validate_ip "$ip_address"; then
+            break
+        else
+            echo "Invalid IP address format. Please enter a valid IP (e.g., 192.168.1.1)"
+        fi
+    done
+
+    # Set production environment variables
+    export APP_ENV=production
+    export APP_DEBUG=false
+    export APP_URL="https://$domain_name"
+    
+    # Update nginx and hosts configuration
+    update_nginx_config "$domain_name"
+    update_hosts_file "$domain_name" "$ip_address"
+else
+    # Local development settings
+    domain_name="fall-detection-backend.test"
+    ip_address="127.0.0.1"
+    
+    # Set local environment variables
+    export APP_ENV=local
+    export APP_DEBUG=true
+    export APP_URL="http://$domain_name"
+    
+    # Update nginx and hosts configuration
+    update_nginx_config "$domain_name"
+    update_hosts_file "$domain_name" "$ip_address"
 fi
 
 # Function to detect OS
@@ -159,10 +249,6 @@ install_docker_linux() {
     exit 0
 }
 
-# Set proper permissions
-mkdir -p storage bootstrap/cache
-chmod -R 777 storage bootstrap/cache
-
 # Start the containers if not running
 if ! docker-compose ps | grep -q "backend-app.*running"; then
     echo "Starting containers..."
@@ -172,7 +258,7 @@ if ! docker-compose ps | grep -q "backend-app.*running"; then
 fi
 
 # Ensure vendor directory exists and has proper permissions
-docker-compose exec backend-app bash -c "mkdir -p /var/www/vendor && chmod -R 755 /var/www/vendor"
+docker-compose exec backend-app bash -c "mkdir -p /var/www/vendor && chmod -R 755 /var/www/vendor && chmod -R 777 storage bootstrap/cache"
 
 # Run composer install inside container
 docker-compose exec backend-app composer install --no-scripts --no-autoloader --no-interaction --prefer-dist
@@ -180,8 +266,16 @@ docker-compose exec backend-app composer install --no-scripts --no-autoloader --
 # Generate autoload files
 docker-compose exec backend-app composer dump-autoload --optimize
 
+# Add storage link if not exists
+docker-compose exec backend-app php artisan storage:link
+
 # Create .env file from .env.example if it doesn't exist
 docker-compose exec backend-app bash -c "if [ ! -f .env ]; then cp .env.example .env; fi"
+
+# Update .env file with environment-specific settings
+docker-compose exec backend-app bash -c "sed -i 's|APP_ENV=.*|APP_ENV=$APP_ENV|' .env && \
+    sed -i 's|APP_DEBUG=.*|APP_DEBUG=$APP_DEBUG|' .env && \
+    sed -i 's|APP_URL=.*|APP_URL=$APP_URL|' .env"
 
 # Generate application key if not exists
 docker-compose exec backend-app php artisan key:generate
@@ -197,7 +291,7 @@ docker-compose exec backend-app php artisan db:seed
 
 echo ""
 echo "Setup completed successfully!"
-echo "The backend application is now available at: fall-detection-backend.test"
+echo "The backend application is now available at: $APP_URL"
 echo ""
 echo "Admin credentials:"
 echo "Email: admin@fall-detection.com"

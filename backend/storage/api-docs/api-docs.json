@@ -1266,6 +1266,671 @@
                     }
                 ]
             }
+        },
+        "/model-weights": {
+            "post": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Store new model weights",
+                "operationId": "d333d9ad525da54835f2debd404d886a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "version",
+                                    "model_type",
+                                    "weights"
+                                ],
+                                "properties": {
+                                    "version": {
+                                        "type": "string",
+                                        "example": "1.0.0"
+                                    },
+                                    "model_type": {
+                                        "type": "string",
+                                        "example": "cnn-lstm"
+                                    },
+                                    "weights": {
+                                        "properties": {
+                                            "layers": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "layer": {
+                                                            "type": "string",
+                                                            "example": "conv1d_1"
+                                                        },
+                                                        "shape": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            },
+                                                            "example": "[32, 64, 3]"
+                                                        },
+                                                        "mean": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0.123
+                                                        },
+                                                        "std": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0.456
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Initial model weights"
+                                    },
+                                    "accuracy": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.95
+                                    },
+                                    "precision": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.94
+                                    },
+                                    "recall": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.93
+                                    },
+                                    "f1_score": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.935
+                                    },
+                                    "metadata": {
+                                        "properties": {
+                                            "node_id": {
+                                                "type": "string",
+                                                "example": "node_1"
+                                            },
+                                            "aggregation_status": {
+                                                "type": "string",
+                                                "example": "pending"
+                                            },
+                                            "peers_connected": {
+                                                "type": "integer",
+                                                "example": 3
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Model weights stored successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Model weights stored successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "version": {
+                                                    "type": "string",
+                                                    "example": "1.0.0"
+                                                },
+                                                "model_type": {
+                                                    "type": "string",
+                                                    "example": "cnn-lstm"
+                                                },
+                                                "weights": {
+                                                    "type": "object"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Initial model weights"
+                                                },
+                                                "accuracy": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.95
+                                                },
+                                                "precision": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.94
+                                                },
+                                                "recall": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.93
+                                                },
+                                                "f1_score": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.935
+                                                },
+                                                "metadata": {
+                                                    "type": "object"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "total_layers": {
+                                                    "type": "integer",
+                                                    "example": 32
+                                                },
+                                                "total_parameters": {
+                                                    "type": "integer",
+                                                    "example": 1500000
+                                                },
+                                                "model_ready": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "node_id": {
+                                                    "type": "string",
+                                                    "example": "node_1"
+                                                },
+                                                "aggregation_status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "peers_connected": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/model-weights/active": {
+            "get": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Get active model weights",
+                "operationId": "2d0dccef3c44efb3fdc588469b627e47",
+                "responses": {
+                    "200": {
+                        "description": "Active model weights retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Active model weights retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "version": {
+                                                    "type": "string",
+                                                    "example": "1.0.0"
+                                                },
+                                                "model_type": {
+                                                    "type": "string",
+                                                    "example": "cnn-lstm"
+                                                },
+                                                "weights": {
+                                                    "type": "object"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Active model weights"
+                                                },
+                                                "accuracy": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.95
+                                                },
+                                                "precision": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.94
+                                                },
+                                                "recall": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.93
+                                                },
+                                                "f1_score": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0.935
+                                                },
+                                                "metadata": {
+                                                    "type": "object"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "total_layers": {
+                                                    "type": "integer",
+                                                    "example": 32
+                                                },
+                                                "total_parameters": {
+                                                    "type": "integer",
+                                                    "example": 1500000
+                                                },
+                                                "model_ready": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "node_id": {
+                                                    "type": "string",
+                                                    "example": "node_1"
+                                                },
+                                                "aggregation_status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "peers_connected": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "No active model weights found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/model-weights/{version}/activate": {
+            "post": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Activate a specific model version",
+                "operationId": "b4017241438c7f0c2c0e251a9128e06a",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "Model version to activate",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "v1.0.0"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Model activated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Model activated successfully"
+                                        },
+                                        "version": {
+                                            "type": "string",
+                                            "example": "v1.0.0"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to activate model"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Model version not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/model-weights/history": {
+            "get": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Get model version history",
+                "operationId": "801b62578ffddbccf525091eaa1cfdb4",
+                "responses": {
+                    "200": {
+                        "description": "Model history retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "version": {
+                                                "type": "string",
+                                                "example": "v1.0.0"
+                                            },
+                                            "model_type": {
+                                                "type": "string",
+                                                "example": "CNN-LSTM"
+                                            },
+                                            "accuracy": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 0.95
+                                            },
+                                            "precision": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 0.94
+                                            },
+                                            "recall": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 0.93
+                                            },
+                                            "f1_score": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 0.935
+                                            },
+                                            "is_active": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2024-03-21T10:00:00Z"
+                                            },
+                                            "weights_summary": {
+                                                "properties": {
+                                                    "total_layers": {
+                                                        "type": "integer",
+                                                        "example": 32
+                                                    },
+                                                    "total_parameters": {
+                                                        "type": "integer",
+                                                        "example": 123456
+                                                    },
+                                                    "model_ready": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/model-weights/{version}": {
+            "delete": {
+                "tags": [
+                    "Model Weights"
+                ],
+                "summary": "Delete a specific model version",
+                "operationId": "42b437979ac155e9210a5f52987f92a1",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "Model version to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "v1.0.0"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Model deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Model deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to delete model"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Model version not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/monitoring/health": {
+            "get": {
+                "tags": [
+                    "Monitoring"
+                ],
+                "summary": "Get system health status",
+                "operationId": "e8b90eaf2f0b717806420ce69e099b1e",
+                "responses": {
+                    "200": {
+                        "description": "System health status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "healthy"
+                                        },
+                                        "components": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "database"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "healthy"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "Connection successful"
+                                                    },
+                                                    "metrics": {
+                                                        "properties": {
+                                                            "response_time": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 0.15
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/monitoring/metrics": {
+            "get": {
+                "tags": [
+                    "Monitoring"
+                ],
+                "summary": "Get system performance metrics",
+                "operationId": "d4fd71fc5a1478f46ff3808bc8fc519c",
+                "parameters": [
+                    {
+                        "name": "hours",
+                        "in": "query",
+                        "description": "Time range in hours",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 24
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "System performance metrics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "metrics": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "cpu_usage"
+                                                    },
+                                                    "value": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 45.5
+                                                    },
+                                                    "unit": {
+                                                        "type": "string",
+                                                        "example": "percent"
+                                                    },
+                                                    "timestamp": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2009,6 +2674,16 @@
                         "type": "object",
                         "nullable": true
                     },
+                    "notification_channels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "context": {
+                        "type": "object",
+                        "nullable": true
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -2095,8 +2770,8 @@
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
         }
     },
@@ -2104,6 +2779,14 @@
         {
             "name": "Elderly Authentication",
             "description": "API Endpoints for elderly user authentication"
+        },
+        {
+            "name": "Model Weights",
+            "description": "API Endpoints for managing model weights"
+        },
+        {
+            "name": "Monitoring",
+            "description": "API Endpoints for system monitoring and health checks"
         },
         {
             "name": "Authentication",
@@ -2120,6 +2803,11 @@
         {
             "name": "Fall Events",
             "description": "Fall Events"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
         }
     ]
 }

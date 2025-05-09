@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\AlertSystemService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @OA\Schema(
@@ -29,6 +30,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *   @OA\Property(property="resolved_at", type="string", format="date-time", nullable=true),
  *   @OA\Property(property="response_time_seconds", type="integer", nullable=true),
  *   @OA\Property(property="response_actions", type="object", nullable=true),
+ *   @OA\Property(property="notification_channels", type="array", @OA\Items(type="string")),
+ *   @OA\Property(property="context", type="object", nullable=true),
  *   @OA\Property(property="created_at", type="string", format="date-time"),
  *   @OA\Property(property="updated_at", type="string", format="date-time"),
  *   @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true)
@@ -55,6 +58,8 @@ class FallEvent extends Model
         'resolved_at',
         'response_time_seconds',
         'response_actions',
+        'notification_channels',
+        'context',
     ];
 
     protected $casts = [
@@ -65,6 +70,8 @@ class FallEvent extends Model
         'sensor_data' => 'array',
         'medical_notes' => 'array',
         'response_actions' => 'array',
+        'notification_channels' => 'array',
+        'context' => 'array',
         'required_medical_attention' => 'boolean',
     ];
 
@@ -82,6 +89,14 @@ class FallEvent extends Model
     public function resolvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    /**
+     * Get the notifications for this fall event.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(FallEventNotification::class);
     }
 
     /**
@@ -114,6 +129,43 @@ class FallEvent extends Model
     public function scopeOfSeverity($query, $severity)
     {
         return $query->where('severity_level', $severity);
+    }
+
+    /**
+     * Get the notification channels based on severity level.
+     */
+    public function getNotificationChannels(): array
+    {
+        return match ($this->severity_level) {
+            'high' => ['email', 'sms', 'push'],
+            'medium' => ['email', 'push'],
+            'low' => ['push'],
+            default => ['email']
+        };
+    }
+
+    /**
+     * Resolve the fall event.
+     */
+    public function resolve(): void
+    {
+        $this->update([
+            'status' => 'resolved',
+            'resolved_at' => now(),
+            'response_time_seconds' => now()->diffInSeconds($this->detected_at)
+        ]);
+    }
+
+    /**
+     * Mark the fall event as a false alarm.
+     */
+    public function markAsFalseAlarm(?string $notes = null): void
+    {
+        $this->update([
+            'status' => 'false_alarm',
+            'notes' => $notes ?? $this->notes,
+            'resolved_at' => now()
+        ]);
     }
 
     protected static function booted()
