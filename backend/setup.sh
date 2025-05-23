@@ -249,6 +249,56 @@ install_docker_linux() {
     exit 0
 }
 
+# Function to setup mobile app
+setup_mobile_app() {
+    echo "Setting up mobile app..."
+    
+    # Install NVM if not installed
+    if [ ! -d "$HOME/.nvm" ]; then
+        echo "Installing NVM..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        
+        # Load NVM
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    else
+        # Load NVM if already installed
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    fi
+
+    # Install and use Node.js 18
+    echo "Installing Node.js 18..."
+    nvm install 18
+    nvm use 18
+    nvm alias default 18
+
+    # Install Expo CLI globally if not installed
+    if ! command -v expo &> /dev/null; then
+        echo "Installing Expo CLI..."
+        npm install -g expo-cli
+    fi
+
+    # Create mobile app directory if it doesn't exist
+    if [ ! -d "mobile-app" ]; then
+        echo "Creating mobile app directory..."
+        mkdir -p mobile-app
+    fi
+
+    # Add NVM to shell profile if not already added
+    if ! grep -q "NVM_DIR" ~/.zshrc 2>/dev/null; then
+        echo "Adding NVM configuration to shell profile..."
+        echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.zshrc
+        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.zshrc
+        echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' >> ~/.zshrc
+    fi
+}
+
+# Setup mobile app
+setup_mobile_app
+
 # Start the containers if not running
 if ! docker-compose ps | grep -q "backend-app.*running"; then
     echo "Starting containers..."
@@ -292,6 +342,7 @@ docker-compose exec backend-app php artisan db:seed
 echo ""
 echo "Setup completed successfully!"
 echo "The backend application is now available at: $APP_URL"
+echo "The mobile app is now available at: http://localhost:19002"
 echo ""
 echo "Admin credentials:"
 echo "Email: admin@fall-detection.com"
