@@ -1,50 +1,167 @@
-# Welcome to your Expo app 👋
+# Fall Detection Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the mobile application for the Fall Detection with IoT and Swarm Learning project. It is built with [Expo](https://expo.dev) (React Native) and is designed to run on Android, iOS, and the web. The app integrates with the backend and other services via Docker Compose for a seamless development and deployment experience.
 
-## Get started
+---
 
-1. Install dependencies
+## Features
 
+- **Cross-platform**: Runs on Android, iOS, and web via Expo.
+- **Authentication**: Secure login and registration.
+- **Real-time Alerts**: Receives and displays fall alerts.
+- **Sensor Integration**: Interfaces with device sensors for fall detection.
+- **Swarm Learning**: Connects to the backend for collaborative model updates.
+- **Modern UI**: Built with React Navigation and modular context providers.
+
+---
+
+## Project Structure
+
+```
+mobile-app/
+│── App.js                  # App entry point, wraps navigation and context providers
+│── Dockerfile              # Docker build for Expo app
+│── start.sh                # Startup script for Docker/CI
+│── package.json            # NPM dependencies and scripts
+│── app.json                # Expo configuration
+│── src/
+│   ├── screens/            # App screens (Home, Login, Register, Settings, Alert)
+│   ├── navigation/         # Navigation stack and logic
+│   ├── contexts/           # React context providers (Auth, App)
+│   ├── api/                # API service layer
+│   ├── constants/          # App-wide constants
+│   ├── styles/             # Shared styles
+│   ├── services/           # Utility services (sound, permissions, etc.)
+│── assets/                 # Images, fonts, etc.
+```
+
+---
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [Docker](https://www.docker.com/) (for containerized development)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (optional for local dev)
+
+---
+
+## Local Development (without Docker)
+
+1. **Install dependencies:**
    ```bash
+   cd mobile-app
    npm install
    ```
 
-2. Start the app
-
+2. **Start the Expo server:**
    ```bash
    npx expo start
    ```
+   - Open the app in your browser, Android/iOS simulator, or Expo Go app.
 
-In the output, you'll find options to open the app in a
+3. **Project structure:**
+   - Edit screens in `src/screens/`
+   - Navigation is managed in `src/navigation/AppNavigator.js`
+   - Context providers are in `src/contexts/`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Running with Docker
 
-## Get a fresh project
+The app can be run in a containerized environment, ideal for team development or CI/CD.
 
-When you're ready, run:
+### **Build and Run the Mobile App Container**
 
 ```bash
-npm run reset-project
+docker-compose build mobile-app
+docker-compose up mobile-app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- The Expo web server will be available at [http://localhost:19002](http://localhost:19002).
+- The app will hot-reload on code changes if you mount the source as a volume.
 
-## Learn more
+### **How it works**
 
-To learn more about developing your project with Expo, look at the following resources:
+- The `Dockerfile` installs all dependencies and runs the `start.sh` script.
+- `start.sh` ensures dependencies are installed and starts the Expo server.
+- Ports `19000`, `19001`, and `19002` are exposed for Expo and web access.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### **Docker Compose Service Example**
 
-## Join the community
+```yaml
+  mobile-app:
+    build:
+      context: ./mobile-app
+      dockerfile: Dockerfile
+    container_name: fall-detection-mobile-app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./mobile-app:/app
+      - mobile-app-node-modules:/app/node_modules
+      - mobile-app-expo:/app/.expo
+    networks:
+      - fall-detection-network
+    environment:
+      - NODE_ENV=production
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - EXPO_PACKAGER_PROXY_URL=http://localhost:19000
+    ports:
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    depends_on:
+      - backend-app
+```
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Context Providers
+
+- **AuthProvider**: Handles authentication state, login, logout, and registration.
+- **AppProvider**: Manages global app state, fall alerts, and system status.
+- Both are implemented in `src/contexts/` and must be imported and wrapped around your app in `App.js`.
+
+---
+
+## Troubleshooting
+
+- **Expo not accessible**: Make sure ports `19000-19002` are not blocked and the container is running.
+- **Dependencies not installing**: The `start.sh` script will auto-install missing dependencies on container start.
+
+---
+
+## Useful Commands
+
+- **Reset Expo project:**
+  ```bash
+  npm run reset-project
+  ```
+- **Rebuild Docker image:**
+  ```bash
+  docker-compose build mobile-app
+  ```
+- **View logs:**
+  ```bash
+  docker-compose logs -f mobile-app
+  ```
+
+---
+
+## Learn More
+
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Navigation](https://reactnavigation.org/)
+- [Docker Compose](https://docs.docker.com/compose/)
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+Developed with ❤️ by iLab Group 12-1 for safer elderly care.
