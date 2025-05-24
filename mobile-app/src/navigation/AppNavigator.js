@@ -1,17 +1,16 @@
-import React from 'react';
-import { View, ActivityIndicator, Text } from 'react-native'; // Import Text for loading message
 import { createStackNavigator } from '@react-navigation/stack';
+import { ActivityIndicator, Text, View } from 'react-native'; // Import Text for loading message
 
 // Import Screens
-import HomeScreen from '../screens/HomeScreen';
-import SettingsScreen from '../screens/SettingsScreen';
 import AlertScreen from '../screens/AlertScreen';
+import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 // Import contexts to check authentication state and alert state
-import { useAuth } from '../contexts/AuthContext'; // Assuming you use AuthContext
 import { useAppContext } from '../contexts/AppContext'; // Assuming you use AppContext for global alert
+import { useAuth } from '../contexts/AuthContext'; // Assuming you use AuthContext
 
 // Import the common styles, which includes COLORS, typography, and spacing
 import { commonStyles } from '../styles/commonStyles';
@@ -118,4 +117,3 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
-
