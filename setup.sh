@@ -164,6 +164,15 @@ check_docker() {
     return 0
 }
 
+# Function to detect Mac processor type
+detect_mac_processor() {
+    if [[ $(uname -m) == 'arm64' ]]; then
+        echo "apple_silicon"
+    else
+        echo "intel"
+    fi
+}
+
 # Check and install Docker if needed
 if ! check_docker; then
     echo "Docker is not installed. Installing Docker..."
@@ -347,4 +356,4 @@ echo ""
 echo "Admin credentials:"
 echo "Email: admin@fall-detection.com"
 echo "Password: password"
-echo ""
+echo "" 
